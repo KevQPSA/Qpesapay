@@ -8,6 +8,19 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  # CI/CD Environment Variables for Security
+  CI: true
+  TESTING: true
+  SECRET_KEY: ci-cd-secret-key-for-testing-only-32-characters-long-secure
+  ENCRYPTION_KEY: ci-cd-encryption-key-for-testing-only-32-characters-long
+  WEBHOOK_SECRET: ci-cd-webhook-secret-for-testing-32-chars
+  DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+  POSTGRES_SERVER: localhost
+  POSTGRES_USER: test_user
+  POSTGRES_PASSWORD: test_password
+  POSTGRES_DB: test_db
+
 jobs:
   build:
     runs-on: ubuntu-latest

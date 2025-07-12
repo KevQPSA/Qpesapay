@@ -14,6 +14,8 @@ from app.commands.payment_commands import CreatePaymentCommand
 from app.queries.payment_queries import GetTransactionQuery
 from app.domain import Currency
 from app.core.exceptions import ValidationError
+from app.core.security import get_current_user
+from app.core.security_audit import EndpointSecurityEnforcer
 
 router = APIRouter()
 
@@ -42,13 +44,28 @@ class PaymentResponse(BaseModel):
 @router.post("/create", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
 async def create_payment(
     request: CreatePaymentRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)  # SECURITY FIX: Add authentication
 ):
     """
     Create a new payment using Sandi Metz-style architecture.
     Clean, focused endpoint that delegates to command handler.
     """
     try:
+        # SECURITY: Validate payment amount
+        if not EndpointSecurityEnforcer.validate_payment_amount(request.amount):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid payment amount"
+            )
+
+        # SECURITY: Ensure user can only create payments for themselves
+        if request.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot create payment for another user"
+            )
+
         # Create command from request
         command = CreatePaymentCommand(
             user_id=UUID(request.user_id),

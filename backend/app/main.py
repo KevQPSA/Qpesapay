@@ -14,8 +14,14 @@ from app.config import settings
 from app.core.logging import setup_logging, get_logger
 from app.core.middleware import add_security_middleware
 from app.core.exceptions import QPesaPayException
+from app.core.error_handlers import setup_error_handlers
 from app.database import check_db_connection
 from app.api.v1.api import api_router
+from app.middleware.security_headers import (
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    SSRFProtectionMiddleware
+)
 
 # Setup logging
 setup_logging()
@@ -40,8 +46,16 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Add security middleware
+# Add OWASP-compliant security middleware
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(SSRFProtectionMiddleware)
+
+# Add existing security middleware
 add_security_middleware(app)
+
+# Setup comprehensive error handlers
+setup_error_handlers(app)
 
 
 # Exception handlers

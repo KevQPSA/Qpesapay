@@ -1,28 +1,117 @@
 """
 Logging configuration for Qpesapay backend.
 Sets up structured logging with proper formatting and handlers.
+Includes security monitoring, audit trails, and performance tracking.
 """
 
 import logging
 import logging.config
+import logging.handlers
 import sys
-from typing import Dict, Any
+import os
+import json
+from typing import Dict, Any, Optional
+from datetime import datetime, timezone
+from pathlib import Path
 import structlog
+from contextvars import ContextVar
 
 from app.config import settings
+
+# Context variables for request tracking
+request_id_var: ContextVar[Optional[str]] = ContextVar('request_id', default=None)
+user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
+ip_address_var: ContextVar[Optional[str]] = ContextVar('ip_address', default=None)
 
 
 def setup_logging():
     """
-    Configure structured logging for the application.
+    Configure comprehensive structured logging for the application.
+    Sets up file handlers, security monitoring, and audit trails.
     """
-    # Configure standard library logging
-    logging.basicConfig(
-        format="%(message)s",
-        stream=sys.stdout,
-        level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
-    )
-    
+    # Create logs directory
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+
+    # Configure file handlers
+    handlers = {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'json' if settings.IS_PRODUCTION else 'console',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': log_dir / 'app.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 5,
+            'formatter': 'json',
+        },
+        'security': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': log_dir / 'security.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 10,  # Keep more security logs
+            'formatter': 'json',
+        },
+        'audit': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': log_dir / 'audit.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 20,  # Keep many audit logs
+            'formatter': 'json',
+        },
+        'transactions': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': log_dir / 'transactions.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 15,  # Keep many transaction logs
+            'formatter': 'json',
+        },
+    }
+
+    # Configure formatters
+    formatters = {
+        'json': {
+            'format': '%(message)s',
+        },
+        'console': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        },
+    }
+
+    # Configure loggers
+    loggers = {
+        '': {  # Root logger
+            'level': settings.LOG_LEVEL.upper(),
+            'handlers': ['console', 'file'],
+        },
+        'security': {
+            'level': 'INFO',
+            'handlers': ['console', 'security'],
+            'propagate': False,
+        },
+        'audit': {
+            'level': 'INFO',
+            'handlers': ['console', 'audit'],
+            'propagate': False,
+        },
+        'transactions': {
+            'level': 'INFO',
+            'handlers': ['console', 'transactions'],
+            'propagate': False,
+        },
+    }
+
+    # Apply logging configuration
+    logging.config.dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': formatters,
+        'handlers': handlers,
+        'loggers': loggers,
+    })
+
     # Configure structlog
     structlog.configure(
         processors=[
@@ -35,8 +124,8 @@ def setup_logging():
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             # Add custom processors
-            add_request_id,
-            add_user_context,
+            add_request_context,
+            add_security_context,
             # Final processor for output format
             structlog.dev.ConsoleRenderer() if not settings.IS_PRODUCTION else structlog.processors.JSONRenderer(),
         ],
@@ -47,46 +136,81 @@ def setup_logging():
     )
 
 
-def add_request_id(logger, method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
+def add_request_context(logger, method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Add request ID to log entries if available.
-    
+    Add request context to log entries.
+
     Args:
         logger: Logger instance
         method_name: Log method name
         event_dict: Event dictionary
-        
+
     Returns:
         Dict: Updated event dictionary
     """
-    # TODO: Extract request ID from context
-    # This would typically come from middleware that sets request ID
-    request_id = getattr(logger, '_request_id', None)
+    # Add request ID from context
+    request_id = request_id_var.get()
     if request_id:
         event_dict['request_id'] = request_id
-    
+
+    # Add user ID from context
+    user_id = user_id_var.get()
+    if user_id:
+        event_dict['user_id'] = user_id
+
+    # Add IP address from context
+    ip_address = ip_address_var.get()
+    if ip_address:
+        event_dict['ip_address'] = ip_address
+
     return event_dict
 
 
-def add_user_context(logger, method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
+def add_security_context(logger, method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Add user context to log entries if available.
-    
+    Add security context to log entries.
+
     Args:
         logger: Logger instance
         method_name: Log method name
         event_dict: Event dictionary
-        
+
     Returns:
         Dict: Updated event dictionary
     """
-    # TODO: Extract user context from request
-    # This would typically come from authentication middleware
-    user_id = getattr(logger, '_user_id', None)
-    if user_id:
-        event_dict['user_id'] = user_id
-    
+    # Add timestamp in UTC
+    event_dict['timestamp_utc'] = datetime.now(timezone.utc).isoformat()
+
+    # Add environment info
+    event_dict['environment'] = 'production' if settings.IS_PRODUCTION else 'development'
+
+    # Add process info for debugging
+    event_dict['process_id'] = os.getpid()
+
     return event_dict
+
+
+def set_request_context(request_id: str, user_id: Optional[str] = None, ip_address: Optional[str] = None):
+    """
+    Set request context for logging.
+
+    Args:
+        request_id: Request ID
+        user_id: User ID (optional)
+        ip_address: IP address (optional)
+    """
+    request_id_var.set(request_id)
+    if user_id:
+        user_id_var.set(user_id)
+    if ip_address:
+        ip_address_var.set(ip_address)
+
+
+def clear_request_context():
+    """Clear request context."""
+    request_id_var.set(None)
+    user_id_var.set(None)
+    ip_address_var.set(None)
 
 
 class SecurityLogger:
@@ -153,7 +277,7 @@ class SecurityLogger:
     def log_api_key_usage(self, api_key_id: str, endpoint: str, ip_address: str, success: bool):
         """
         Log API key usage.
-        
+
         Args:
             api_key_id: API key ID
             endpoint: API endpoint accessed
@@ -167,6 +291,101 @@ class SecurityLogger:
             endpoint=endpoint,
             ip_address=ip_address,
             success=success,
+        )
+
+    def log_account_lockout(self, user_id: str, email: str, failed_attempts: int, lockout_duration: int, ip_address: str):
+        """
+        Log account lockout event.
+
+        Args:
+            user_id: User ID
+            email: User email
+            failed_attempts: Number of failed attempts
+            lockout_duration: Lockout duration in minutes
+            ip_address: Client IP address
+        """
+        self.logger.warning(
+            "Account locked due to failed login attempts",
+            event_type="account_lockout",
+            user_id=user_id,
+            email=email,
+            failed_attempts=failed_attempts,
+            lockout_duration_minutes=lockout_duration,
+            ip_address=ip_address,
+        )
+
+    def log_token_blacklisted(self, user_id: str, token_type: str, reason: str, ip_address: str):
+        """
+        Log token blacklisting event.
+
+        Args:
+            user_id: User ID
+            token_type: Type of token (access/refresh)
+            reason: Reason for blacklisting
+            ip_address: Client IP address
+        """
+        self.logger.info(
+            "Token blacklisted",
+            event_type="token_blacklisted",
+            user_id=user_id,
+            token_type=token_type,
+            reason=reason,
+            ip_address=ip_address,
+        )
+
+    def log_rate_limit_exceeded(self, endpoint: str, ip_address: str, user_id: Optional[str] = None):
+        """
+        Log rate limit exceeded event.
+
+        Args:
+            endpoint: API endpoint
+            ip_address: Client IP address
+            user_id: User ID (if authenticated)
+        """
+        self.logger.warning(
+            "Rate limit exceeded",
+            event_type="rate_limit_exceeded",
+            endpoint=endpoint,
+            ip_address=ip_address,
+            user_id=user_id,
+        )
+
+    def log_unauthorized_access(self, endpoint: str, ip_address: str, user_agent: str, attempted_action: str):
+        """
+        Log unauthorized access attempt.
+
+        Args:
+            endpoint: API endpoint
+            ip_address: Client IP address
+            user_agent: User agent string
+            attempted_action: What the user tried to do
+        """
+        self.logger.warning(
+            "Unauthorized access attempt",
+            event_type="unauthorized_access",
+            endpoint=endpoint,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            attempted_action=attempted_action,
+        )
+
+    def log_data_breach_attempt(self, user_id: str, attempted_data: str, ip_address: str, details: Dict[str, Any]):
+        """
+        Log potential data breach attempt.
+
+        Args:
+            user_id: User ID
+            attempted_data: Type of data attempted to access
+            ip_address: Client IP address
+            details: Additional details
+        """
+        self.logger.critical(
+            "Potential data breach attempt detected",
+            event_type="data_breach_attempt",
+            user_id=user_id,
+            attempted_data=attempted_data,
+            ip_address=ip_address,
+            details=details,
         )
 
 
