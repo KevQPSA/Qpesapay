@@ -4,6 +4,7 @@ Configures the application with middleware, routes, and error handling.
 """
 
 from datetime import datetime
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -27,6 +28,35 @@ from app.middleware.security_headers import (
 setup_logging()
 logger = get_logger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager."""
+    # Startup
+    logger.info("QPesaPay application starting up")
+
+    # TODO: Initialize services
+    # - Database connection pool
+    # - Redis connection
+    # - Background task scheduler
+    # - External service connections
+
+    logger.info("QPesaPay application startup complete")
+
+    yield
+
+    # Shutdown
+    logger.info("QPesaPay application shutting down")
+
+    # TODO: Cleanup resources
+    # - Close database connections
+    # - Close Redis connections
+    # - Stop background tasks
+    # - Flush logs
+
+    logger.info("QPesaPay application shutdown complete")
+
+
 # Create FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -34,6 +64,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if not settings.IS_PRODUCTION else None,
     redoc_url="/redoc" if not settings.IS_PRODUCTION else None,
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -170,7 +201,7 @@ async def health_check():
     health_status = {
         "status": "healthy",
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(datetime.timezone.utc).isoformat(),
         "services": {}
     }
     
@@ -228,33 +259,7 @@ async def get_metrics():
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-# Startup and shutdown events
-@app.on_event("startup")
-async def startup_event():
-    """Application startup event."""
-    logger.info("QPesaPay application starting up")
-    
-    # TODO: Initialize services
-    # - Database connection pool
-    # - Redis connection
-    # - Background task scheduler
-    # - External service connections
-    
-    logger.info("QPesaPay application startup complete")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Application shutdown event."""
-    logger.info("QPesaPay application shutting down")
-    
-    # TODO: Cleanup resources
-    # - Close database connections
-    # - Close Redis connections
-    # - Stop background tasks
-    # - Flush logs
-    
-    logger.info("QPesaPay application shutdown complete")
+# Event handlers have been moved to the lifespan context manager above
 
 
 if __name__ == "__main__":

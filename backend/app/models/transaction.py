@@ -269,7 +269,7 @@ class Transaction(Base):
         old_status = self.status
         self.status = new_status
         
-        now = datetime.utcnow()
+        now = datetime.now(datetime.timezone.utc)
         
         if new_status == TransactionStatus.PROCESSING and old_status == TransactionStatus.PENDING:
             self.processed_at = now

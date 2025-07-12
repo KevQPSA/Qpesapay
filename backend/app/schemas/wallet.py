@@ -3,7 +3,7 @@ Wallet schemas for Qpesapay backend.
 Pydantic models for wallet-related API requests and responses.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
@@ -18,7 +18,8 @@ class WalletBase(BaseModel):
     currency: str = Field(..., description="Currency code (BTC, USDT)")
     network: Optional[str] = Field(None, description="Blockchain network (mainnet, testnet)")
     
-    @validator('currency')
+    @field_validator('currency')
+    @classmethod
     def validate_currency(cls, v):
         """Validate currency code."""
         valid_currencies = ['BTC', 'USDT', 'ETH']
@@ -26,30 +27,30 @@ class WalletBase(BaseModel):
             raise ValueError(f'Currency must be one of: {", ".join(valid_currencies)}')
         return v.upper()
     
-    @validator('network')
-    def validate_network(cls, v, values):
+    @model_validator(mode='after')
+    def validate_network(self):
         """Validate network based on wallet type."""
-        if v is None:
-            return v
-        
-        wallet_type = values.get('wallet_type')
+        if self.network is None:
+            return self
+
         valid_networks = {
             WalletNetwork.BITCOIN: ['mainnet', 'testnet'],
             WalletNetwork.ETHEREUM: ['mainnet', 'goerli', 'sepolia'],
             WalletNetwork.TRON: ['mainnet', 'shasta', 'nile']
         }
-        
-        if wallet_type and v not in valid_networks.get(wallet_type, []):
-            raise ValueError(f'Invalid network for {wallet_type.value} wallet')
-        
-        return v
+
+        if self.wallet_type and self.network not in valid_networks.get(self.wallet_type, []):
+            raise ValueError(f'Invalid network for {self.wallet_type.value} wallet')
+
+        return self
 
 
 class WalletCreate(WalletBase):
     """Schema for creating a new wallet."""
     label: Optional[str] = Field(None, max_length=100, description="Wallet label/name")
     
-    @validator('label')
+    @field_validator('label')
+    @classmethod
     def validate_label(cls, v):
         """Validate wallet label."""
         if v is None:
@@ -67,7 +68,8 @@ class WalletImport(BaseModel):
     label: Optional[str] = Field(None, max_length=100, description="Wallet label")
     network: Optional[str] = Field(None, description="Blockchain network")
     
-    @validator('private_key')
+    @field_validator('private_key')
+    @classmethod
     def validate_private_key(cls, v):
         """Validate private key format."""
         if not v.strip():
@@ -88,7 +90,8 @@ class WalletUpdate(BaseModel):
     label: Optional[str] = Field(None, max_length=100, description="Wallet label")
     daily_spending_limit: Optional[Decimal] = Field(None, ge=0, description="Daily spending limit")
     
-    @validator('label')
+    @field_validator('label')
+    @classmethod
     def validate_label(cls, v):
         """Validate wallet label."""
         if v is None:
@@ -178,21 +181,23 @@ class WalletSend(BaseModel):
     fee_rate: Optional[Decimal] = Field(None, ge=0, description="Fee rate (satoshis per byte for BTC)")
     note: Optional[str] = Field(None, max_length=500, description="Transaction note")
     
-    @validator('to_address')
+    @field_validator('to_address')
+    @classmethod
     def validate_address(cls, v):
         """Validate recipient address format."""
         if not v.strip():
             raise ValueError('Recipient address cannot be empty')
-        
+
         address = v.strip()
-        
+
         # Basic validation - more specific validation would be done in the service layer
         if len(address) < 26 or len(address) > 62:
             raise ValueError('Invalid address format')
-        
+
         return address
-    
-    @validator('amount')
+
+    @field_validator('amount')
+    @classmethod
     def validate_amount(cls, v):
         """Validate transaction amount."""
         if v <= 0:
@@ -211,7 +216,8 @@ class WalletReceive(BaseModel):
     label: Optional[str] = Field(None, max_length=100, description="Address label")
     expires_in: Optional[int] = Field(None, ge=300, le=86400, description="Expiration time in seconds")
     
-    @validator('label')
+    @field_validator('label')
+    @classmethod
     def validate_label(cls, v):
         """Validate address label."""
         if v is None:
@@ -284,24 +290,42 @@ class WalletRestore(BaseModel):
     derivation_path: Optional[str] = Field(None, description="Derivation path")
     label: Optional[str] = Field(None, description="Wallet label")
     
-    @validator('mnemonic_phrase')
+    @field_validator('mnemonic_phrase')
+    @classmethod
     def validate_mnemonic(cls, v):
         """Validate mnemonic phrase."""
         if v is None:
             return v
-        
+
         words = v.strip().split()
         if len(words) not in [12, 15, 18, 21, 24]:
             raise ValueError('Mnemonic phrase must contain 12, 15, 18, 21, or 24 words')
-        
+
         return v.strip()
-    
-    @validator('private_key')
+
+    @field_validator('private_key')
+    @classmethod
     def validate_private_key(cls, v):
         """Validate private key."""
         if v is None:
             return v
-        return WalletImport.validate_private_key(v)
+        # Call the static method from WalletImport class
+        if not v.strip():
+            raise ValueError('Private key cannot be empty')
+
+        private_key = v.strip()
+
+        # Basic validation - more specific validation would be done in the service layer
+        if len(private_key) < 32:
+            raise ValueError('Private key is too short')
+
+        # Check if it's a valid hex string (for most cryptocurrencies)
+        try:
+            int(private_key, 16)
+        except ValueError:
+            raise ValueError('Private key must be a valid hexadecimal string')
+
+        return private_key
 
 
 class WalletSync(BaseModel):
@@ -350,16 +374,17 @@ class WalletSecurityUpdate(BaseModel):
     daily_spending_limit: Optional[Decimal] = Field(None, ge=0, description="Daily spending limit")
     whitelist_addresses: Optional[List[str]] = Field(None, description="Whitelisted addresses")
     
-    @validator('whitelist_addresses')
+    @field_validator('whitelist_addresses')
+    @classmethod
     def validate_addresses(cls, v):
         """Validate whitelisted addresses."""
         if v is None:
             return v
-        
+
         for address in v:
             if not address.strip():
                 raise ValueError('Address cannot be empty')
             if len(address.strip()) < 26 or len(address.strip()) > 62:
                 raise ValueError(f'Invalid address format: {address}')
-        
+
         return [addr.strip() for addr in v]
