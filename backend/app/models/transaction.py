@@ -9,7 +9,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional, Dict, Any
 
@@ -269,7 +269,7 @@ class Transaction(Base):
         old_status = self.status
         self.status = new_status
         
-        now = datetime.now(datetime.timezone.utc)
+        now = datetime.now(timezone.utc)
         
         if new_status == TransactionStatus.PROCESSING and old_status == TransactionStatus.PENDING:
             self.processed_at = now

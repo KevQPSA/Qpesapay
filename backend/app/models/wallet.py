@@ -9,7 +9,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional, Dict, Any
 
@@ -275,7 +275,7 @@ class Wallet(Base):
     
     def soft_delete(self):
         """Soft delete the wallet."""
-        self.deleted_at = datetime.now(datetime.timezone.utc)
+        self.deleted_at = datetime.now(timezone.utc)
         self.status = WalletStatus.INACTIVE
     
     def restore(self):
@@ -285,7 +285,7 @@ class Wallet(Base):
     
     def update_last_used(self):
         """Update last used timestamp."""
-        self.last_used = datetime.now(datetime.timezone.utc)
+        self.last_used = datetime.now(timezone.utc)
     
     def to_dict(self, include_sensitive: bool = False) -> Dict[str, Any]:
         """

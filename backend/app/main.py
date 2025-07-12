@@ -3,7 +3,7 @@ Main FastAPI application for QPesaPay backend.
 Configures the application with middleware, routes, and error handling.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -205,7 +205,7 @@ async def health_check():
     health_status = {
         "status": "healthy",
         "version": "1.0.0",
-        "timestamp": datetime.now(datetime.timezone.utc).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "services": {}
     }
     

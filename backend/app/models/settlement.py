@@ -9,7 +9,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional, Dict, Any, List
 
@@ -294,7 +294,7 @@ class Settlement(Base):
         retry_delays = [300, 900, 2700]  # seconds
         if self.retry_count <= len(retry_delays):
             delay = retry_delays[self.retry_count - 1]
-            self.next_retry_at = datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=delay)
+            self.next_retry_at = datetime.now(timezone.utc) + datetime.timedelta(seconds=delay)
     
     def set_error(self, error_code: str, error_message: str):
         """
