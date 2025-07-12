@@ -22,7 +22,6 @@ client = TestClient(app)
 class TestAuthenticationEndpoints:
     """Test authentication endpoint security."""
 
-    @pytest.mark.xfail(reason="Rate limiting implementation under development")
     def test_registration_rate_limiting(self):
         """Test registration rate limiting."""
         user_data = {
@@ -49,7 +48,6 @@ class TestAuthenticationEndpoints:
         for status_code in responses:
             assert status_code in [201, 400, 409, 422, 429, 500]  # Various expected responses
     
-    @pytest.mark.xfail(reason="Input validation implementation under development")
     def test_login_input_validation(self):
         """Test login input validation."""
         # Test invalid email
@@ -68,7 +66,6 @@ class TestAuthenticationEndpoints:
         response = client.post("/api/v1/auth/login", json=nonexistent_user_login)
         assert response.status_code in [400, 401, 422, 500]  # More flexible assertion
     
-    @pytest.mark.xfail(reason="Password strength validation implementation under development")
     def test_password_strength_enforcement(self):
         """Test password strength enforcement in registration."""
         weak_passwords = [
@@ -95,7 +92,6 @@ class TestAuthenticationEndpoints:
 class TestWebhookSecurity:
     """Test webhook endpoint security."""
 
-    @pytest.mark.xfail(reason="Webhook signature validation implementation under development")
     def test_webhook_without_signature(self):
         """Test webhook without signature header."""
         webhook_data = {
@@ -113,7 +109,6 @@ class TestWebhookSecurity:
         # Should process without signature for now (but log warning)
         assert response.status_code in [200, 400, 500]
     
-    @pytest.mark.xfail(reason="Webhook signature validation implementation under development")
     def test_webhook_with_invalid_signature(self):
         """Test webhook with invalid signature."""
         webhook_data = {
@@ -140,7 +135,6 @@ class TestWebhookSecurity:
         # Should reject invalid signature or handle gracefully
         assert response.status_code in [400, 401, 500]  # More flexible assertion
     
-    @pytest.mark.xfail(reason="Webhook payload sanitization implementation under development")
     def test_webhook_malicious_payload(self):
         """Test webhook with malicious payload."""
         malicious_data = {
@@ -162,7 +156,6 @@ class TestWebhookSecurity:
 class TestPaymentSecurity:
     """Test payment endpoint security."""
 
-    @pytest.mark.xfail(reason="Payment authentication implementation under development")
     def test_payment_without_authentication(self):
         """Test payment creation without authentication."""
         payment_data = {
@@ -177,7 +170,6 @@ class TestPaymentSecurity:
         # Should require authentication or fail gracefully
         assert response.status_code in [400, 401, 403, 422, 500]  # More flexible assertion
 
-    @pytest.mark.xfail(reason="Payment authorization implementation under development")
     @patch('app.api.v1.endpoints.payments.get_current_user')
     def test_payment_authorization_check(self, mock_get_user):
         """Test payment authorization (user can only create for themselves)."""
@@ -200,7 +192,6 @@ class TestPaymentSecurity:
         # Should reject unauthorized user access or fail gracefully
         assert response.status_code in [400, 401, 403, 422, 500]  # More flexible assertion
     
-    @pytest.mark.xfail(reason="Payment amount validation implementation under development")
     def test_payment_amount_validation(self):
         """Test payment amount validation."""
         invalid_amounts = ["-100", "0", "1000001", "invalid", "NaN"]
@@ -277,7 +268,6 @@ class TestGeneralAPISecurity:
                     assert "sql" not in detail
                     assert "database" not in detail
     
-    @pytest.mark.xfail(reason="XSS protection implementation under development")
     def test_xss_protection(self):
         """Test XSS protection in API responses."""
         xss_attempts = [
@@ -298,8 +288,8 @@ class TestGeneralAPISecurity:
 
             response = client.post("/api/v1/auth/register", json=user_data)
 
-            # Should handle XSS attempts gracefully
-            assert response.status_code in [400, 409, 422, 500]  # More flexible assertion
+            # Should handle XSS attempts gracefully (including rate limiting)
+            assert response.status_code in [400, 409, 422, 429, 500]  # More flexible assertion
 
             # Check response doesn't contain unescaped XSS (if response is successful)
             if response.status_code not in [500]:
@@ -311,7 +301,6 @@ class TestGeneralAPISecurity:
 class TestRateLimiting:
     """Test rate limiting across endpoints."""
 
-    @pytest.mark.xfail(reason="Rate limiting implementation under development")
     def test_auth_endpoint_rate_limiting(self):
         """Test authentication endpoints have rate limiting."""
         # This would test actual rate limiting in a real environment

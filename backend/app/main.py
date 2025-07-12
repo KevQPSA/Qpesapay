@@ -126,13 +126,39 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         url=str(request.url),
         method=request.method,
     )
-    
+
+    # Serialize error details to ensure JSON compatibility
+    serialized_errors = []
+    for error in exc.errors():
+        serialized_error = {
+            "type": error.get("type"),
+            "loc": error.get("loc"),
+            "msg": error.get("msg"),
+            "input": str(error.get("input")) if error.get("input") is not None else None,
+        }
+        # Handle ctx field which may contain non-serializable objects
+        if "ctx" in error:
+            ctx = error["ctx"]
+            if isinstance(ctx, dict):
+                serialized_ctx = {}
+                for key, value in ctx.items():
+                    try:
+                        # Try to serialize the value
+                        import json
+                        json.dumps(value)
+                        serialized_ctx[key] = value
+                    except (TypeError, ValueError):
+                        # If not serializable, convert to string
+                        serialized_ctx[key] = str(value)
+                serialized_error["ctx"] = serialized_ctx
+        serialized_errors.append(serialized_error)
+
     return JSONResponse(
         status_code=422,
         content={
             "error": "ValidationError",
             "message": "Request validation failed",
-            "details": exc.errors(),
+            "details": serialized_errors,
         }
     )
 
