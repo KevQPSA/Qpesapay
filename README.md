@@ -1,6 +1,6 @@
 # QPesaPay - Kenya Market Crypto-Fiat Payment Processor
 
-[![CI/CD](https://github.com/yourusername/qpesapay/workflows/CI/badge.svg)](https://github.com/yourusername/qpesapay/actions)
+[![CI/CD](https://github.com/KevQPSA/Qpesapay/workflows/CI/badge.svg)](https://github.com/KevQPSA/Qpesapay/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -192,7 +192,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - 📧 Email: support@qpesapay.com
 - 📱 WhatsApp: +254700000000
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/qpesapay/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/KevQPSA/Qpesapay/issues)
 
 ## 🗺️ Roadmap
 
