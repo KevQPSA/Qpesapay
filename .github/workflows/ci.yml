@@ -76,7 +76,7 @@ jobs:
       run: |
         cat > backend/.env << EOF
         # Application Configuration
-        PROJECT_NAME=QPesaPay
+        PROJECT_NAME=Qpesapay
         API_V1_STR=/api/v1
         SECRET_KEY=test-secret-key-for-ci-very-long-and-secure-key-123456789
         ACCESS_TOKEN_EXPIRE_MINUTES=60

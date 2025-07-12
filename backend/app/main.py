@@ -210,7 +210,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 async def read_root():
     """Root endpoint with basic information."""
     return {
-        "message": "Welcome to QPesaPay",
+        "message": f"Welcome to {settings.PROJECT_NAME}",
         "description": "Kenya Market Payment Gateway",
         "version": "1.0.0",
         "status": "operational"
