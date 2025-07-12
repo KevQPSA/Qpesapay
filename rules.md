@@ -1,5 +1,17 @@
+CRUCIAL!!!
+
+Start with Martin Fowler - His "Patterns of Enterprise Application Architecture" is crucial for payment systems. You'll need patterns like Transaction Script, Domain Model, and Gateway patterns for handling financial transactions and external integrations.
+Eric Evans' Domain-Driven Design is essential because payment processing involves complex business rules around currencies, exchange rates, compliance, and settlement. DDD helps you model these financial domains accurately and handle the intricate business logic.
+Robert C. Martin's "Clean Architecture" becomes critical for payment systems because you need clear separation between your core business logic and external dependencies (blockchain networks, banking APIs, regulatory systems). The dependency inversion principle is vital when dealing with multiple external services.
+Add Vaughn Vernon's "Implementing Domain-Driven Design" - This builds on Evans with practical implementation guidance, especially around event sourcing and CQRS, which are valuable for financial audit trails and handling high transaction volumes.
+Michael Nygard's "Release It!" - This focuses on production-ready systems, fault tolerance, and resilience patterns. Payment processors can't afford downtime, so you need circuit breakers, timeouts, and graceful degradation.
+Security-focused reading would include resources on cryptographic implementations and secure coding practices, though these might be more specialized texts than general software engineering books.
+The financial domain demands extreme reliability, auditability, and regulatory compliance - so architecture and domain modeling become more critical than in typical applications.
+-  Embody Sandi Metz principles and all of the above like your life depends on it. ALWAYS!!!
+
+
 ### 🔄 Project Awareness & Context & Research
--  Embody Sandi Metz principles like your life depends on it. ALWAYS!!! 
+-  
 - **Always read `PLANNING.md`** at the start of a new conversation to understand the project's architecture, goals, style, and constraints.
 - **Check `TASK.md`** before starting a new task. If the task isn’t listed, add it with a brief description and today's date.
 - **Use consistent naming conventions, file structure, and architecture patterns** as described in `PLANNING.md`.
