@@ -35,13 +35,14 @@ def setup_emergency_environment():
 def run_tests_with_timeout():
     """Run tests with aggressive timeout protection"""
     
-    # Test command with multiple timeout layers
+    # Test command with multiple timeout layers and parallel execution
     cmd = [
         sys.executable, "-m", "pytest",
         "app/tests/",
         "-v",
         "--timeout=30",  # 30 second per-test timeout
         "--timeout-method=thread",
+        "-n", "auto",  # Parallel execution
         "--tb=short",
         "--disable-warnings",
         "--maxfail=5",  # Stop after 5 failures
