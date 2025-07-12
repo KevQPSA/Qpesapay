@@ -158,6 +158,16 @@ This is a financial application with strict security requirements:
 - **Input validation** and sanitization
 - **KYC/AML compliance** from day one
 
+### ⚠️ Security Notice
+
+**This is open source code for educational and development purposes.**
+
+- 🔒 **Never commit secrets** - All API keys, passwords, and private keys must be in environment variables
+- 🔒 **Production deployment** - Use separate private configuration repositories for production
+- 🔒 **Environment files** - `.env` files are gitignored and never committed
+- 🔒 **Code review** - All changes go through pull request review process
+- 🔒 **Dependency scanning** - Regular security audits of dependencies
+
 ## 🌍 Kenya Market Focus
 
 - **M-Pesa Integration** - Native mobile money support
