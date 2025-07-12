@@ -12,7 +12,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
 from app.core.logging import setup_logging, get_logger
-from app.core.middleware import add_security_middleware
+from app.core.middleware import RequestLoggingMiddleware, AuthenticationMiddleware
 from app.core.exceptions import QPesaPayException
 from app.core.error_handlers import setup_error_handlers
 from app.database import check_db_connection
@@ -51,8 +51,9 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SSRFProtectionMiddleware)
 
-# Add existing security middleware
-add_security_middleware(app)
+# Add core middleware (without duplicate rate limiting)
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(AuthenticationMiddleware)
 
 # Setup comprehensive error handlers
 setup_error_handlers(app)
