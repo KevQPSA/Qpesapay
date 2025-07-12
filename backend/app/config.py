@@ -13,17 +13,17 @@ class Settings(BaseSettings):
 
     # Security Configuration
     SECRET_KEY: str = Field(
-        default="default-secret-key-for-ci-cd-only-32-chars-long",
+        default="default-secret-key-for-ci-cd-only-32-characters-long-secure",
         min_length=32,
         description="JWT secret key"
     )
     ENCRYPTION_KEY: str = Field(
-        default="default-encryption-key-for-ci-cd-only-32-chars",
+        default="default-encryption-key-for-ci-cd-only-32-characters-long",
         min_length=32,
         description="Data encryption key"
     )
     WEBHOOK_SECRET: str = Field(
-        default="default-webhook-secret-for-ci-cd",
+        default="default-webhook-secret-for-ci-cd-32-chars",
         min_length=16,
         description="Webhook signature secret"
     )
