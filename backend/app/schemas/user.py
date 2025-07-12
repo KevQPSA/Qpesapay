@@ -10,6 +10,10 @@ from uuid import UUID
 import re
 
 from app.models.user import AccountType, KYCStatus
+from app.core.validation import (
+    validate_email_address, validate_phone_number,
+    sanitize_string, validate_password, ValidationError
+)
 
 
 class UserBase(BaseModel):
@@ -19,35 +23,31 @@ class UserBase(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100, description="First name")
     last_name: Optional[str] = Field(None, min_length=1, max_length=100, description="Last name")
     
+    @validator('email')
+    def validate_email(cls, v):
+        """Validate email address using secure validation."""
+        try:
+            return validate_email_address(v)
+        except ValidationError as e:
+            raise ValueError(str(e))
+
     @validator('phone_number')
-    def validate_phone_number(cls, v):
-        """Validate phone number format for Kenya."""
-        # Remove any spaces or special characters
-        phone = re.sub(r'[^\d+]', '', v)
-        
-        # Kenya phone number patterns
-        patterns = [
-            r'^\+254[17]\d{8}$',  # +254 format
-            r'^254[17]\d{8}$',    # 254 format
-            r'^0[17]\d{8}$'       # 0 format
-        ]
-        
-        if not any(re.match(pattern, phone) for pattern in patterns):
-            raise ValueError('Invalid Kenyan phone number format')
-        
-        # Normalize to +254 format
-        if phone.startswith('0'):
-            phone = '+254' + phone[1:]
-        elif phone.startswith('254'):
-            phone = '+' + phone
-        
-        return phone
+    def validate_phone(cls, v):
+        """Validate phone number using secure validation."""
+        try:
+            return validate_phone_number(v, "KE")
+        except ValidationError as e:
+            raise ValueError(str(e))
     
     @validator('first_name', 'last_name')
     def validate_names(cls, v):
-        """Validate name fields."""
+        """Validate name fields using secure sanitization."""
         if v is None:
             return v
+        try:
+            return sanitize_string(v, max_length=100)
+        except ValidationError as e:
+            raise ValueError(str(e))
         
         # Remove extra whitespace
         name = v.strip()
@@ -61,10 +61,18 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """Schema for creating a new user."""
-    password: str = Field(..., min_length=8, max_length=128, description="User password")
+    password: str = Field(..., min_length=12, max_length=128, description="User password")
     account_type: AccountType = Field(default=AccountType.PERSONAL, description="Account type")
     preferred_language: str = Field(default="en", description="Preferred language")
     preferred_currency: str = Field(default="KES", description="Preferred currency")
+
+    @validator('password')
+    def validate_password_strength(cls, v):
+        """Validate password using secure validation."""
+        try:
+            return validate_password(v)
+        except ValidationError as e:
+            raise ValueError(str(e))
     
     @validator('password')
     def validate_password(cls, v):
