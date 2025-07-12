@@ -5,7 +5,8 @@ import os
 import pytest
 
 # Set environment variables BEFORE any imports that might use them
-os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing")
+os.environ.setdefault("TESTING", "true")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-32-characters-long-secure")
 os.environ.setdefault("POSTGRES_SERVER", "localhost")
 os.environ.setdefault("POSTGRES_USER", "test_user")
 os.environ.setdefault("POSTGRES_PASSWORD", "test_password")
@@ -26,6 +27,6 @@ os.environ.setdefault("TRON_PRIVATE_KEY", "test_private_key")
 os.environ.setdefault("BITCOIN_RPC_URL", "http://localhost:8332")
 os.environ.setdefault("BITCOIN_RPC_USER", "test_user")
 os.environ.setdefault("BITCOIN_RPC_PASSWORD", "test_password")
-os.environ.setdefault("ENCRYPTION_KEY", "test-encryption-key-32-characters")
+os.environ.setdefault("ENCRYPTION_KEY", "test-encryption-key-32-characters-long-secure")
 os.environ.setdefault("WEBHOOK_SECRET", "test-webhook-secret")
 os.environ.setdefault("EXCHANGE_RATE_API_KEY", "test-exchange-rate-api-key")
