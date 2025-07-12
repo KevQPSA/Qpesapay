@@ -59,6 +59,11 @@ jobs:
       run: |
         pip install -r backend/requirements.lock
 
+    - name: Install PostgreSQL client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+
     - name: Create test environment file
       run: |
         cat > backend/.env << EOF
