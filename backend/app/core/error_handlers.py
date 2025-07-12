@@ -10,10 +10,19 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.exc import SQLAlchemyError
-from pydantic import ValidationError
+from pydantic import ValidationError as PydanticValidationError
 
 from app.core.exceptions import (
-    QPesaPayException, SecureErrorHandler, SecurityAwareHTTPException
+    QPesaPayException,
+    SecureErrorHandler,
+    SecurityAwareHTTPException,
+    AuthenticationError,
+    AuthorizationError,
+    ValidationError,
+    PaymentError,
+    WalletError,
+    DatabaseError,
+    RateLimitError
 )
 from app.core.logging import security_logger, get_logger
 from app.config import settings
