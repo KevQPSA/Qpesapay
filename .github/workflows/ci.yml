@@ -1,0 +1,153 @@
+# .github/workflows/ci.yml
+
+name: Python CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install pip-tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-tools
+
+    - name: Compile requirements.txt to requirements.lock
+      run: |
+        pip-compile backend/requirements.txt --output-file=backend/requirements.lock
+
+    - name: Install dependencies from lock file
+      run: |
+        pip install -r backend/requirements.lock
+
+    - name: Create test environment file
+      run: |
+        cat > backend/.env << EOF
+        # Application Configuration
+        PROJECT_NAME=QPesaPay
+        API_V1_STR=/api/v1
+        SECRET_KEY=test-secret-key-for-ci-very-long-and-secure-key-123456789
+        ACCESS_TOKEN_EXPIRE_MINUTES=60
+        IS_PRODUCTION=false
+        LOG_LEVEL=INFO
+        
+        # Database Configuration
+        POSTGRES_SERVER=localhost
+        POSTGRES_USER=test_user
+        POSTGRES_PASSWORD=test_password
+        POSTGRES_DB=test_db
+        DATABASE_URL=postgresql+asyncpg://test_user:test_password@localhost:5432/test_db
+        
+        # CORS Configuration
+        BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","http://localhost:3002"]
+        
+        # M-Pesa Test Configuration
+        MPESA_CONSUMER_KEY=test_consumer_key
+        MPESA_CONSUMER_SECRET=test_consumer_secret
+        MPESA_SHORTCODE=123456
+        MPESA_PASSKEY=test_passkey
+        MPESA_CALLBACK_URL=http://localhost:8000/api/v1/webhooks/mpesa/callback
+        MPESA_TIMEOUT_URL=http://localhost:8000/api/v1/webhooks/mpesa/timeout
+        MPESA_RESULT_URL=http://localhost:8000/api/v1/webhooks/mpesa/result
+        
+        # Blockchain Test Configuration
+        ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/test
+        ETHEREUM_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+        TRON_RPC_URL=https://api.trongrid.io
+        TRON_API_KEY=test_api_key
+        TRON_PRIVATE_KEY=test_private_key
+        BITCOIN_RPC_URL=http://localhost:8332
+        BITCOIN_RPC_USER=test_user
+        BITCOIN_RPC_PASSWORD=test_password
+        
+        # Security Configuration
+        ENCRYPTION_KEY=test-encryption-key-32-characters-long-for-security
+        WEBHOOK_SECRET=test-webhook-secret-for-signature-verification
+        EXCHANGE_RATE_API_KEY=test-exchange-rate-api-key
+        EOF
+
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432 -U test_user; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+
+    - name: Run database migrations
+      env:
+        PYTHONPATH: backend
+      run: |
+        cd backend
+        alembic upgrade head
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 backend/app --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 backend/app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Type check with mypy
+      run: |
+        cd backend
+        mypy app --ignore-missing-imports
+
+    - name: Test with pytest
+      env:
+        PYTHONPATH: backend
+      run: |
+        cd backend
+        python -m pytest app/tests/ -v --cov=app --cov-report=xml --cov-report=html
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Archive coverage reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: backend/htmlcov/

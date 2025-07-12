@@ -1,0 +1,746 @@
+Phase 1: MVP Core Features
+1. Core Backend Services
+1.1 Authentication & User Management
+Features:
+Basic user registration and authentication
+JWT-based authentication with refresh tokens
+Role-based access control (personal user, merchant, admin)
+Basic KYC verification (email, phone)
+Technical Considerations:
+Implement using FastAPI with Pydantic validation
+Use PostgreSQL for user data storage
+Implement proper password hashing with bcrypt
+Store JWT secrets securely in environment variables
+1.2 Wallet Management
+Features:
+BTC wallet creation and management
+USDT wallet creation on Ethereum and Tron networks
+Balance checking and transaction history
+Secure private key storage
+Technical Considerations:
+Use HD wallet implementation for key derivation
+Implement field-level encryption for private keys
+Use Web3.py for Ethereum USDT interactions
+Use Tronpy for Tron USDT interactions
+Use Bitcoin-core compatible library for BTC
+CRITICAL: Never use float for monetary calculations - always use Decimal
+1.3 Payment Processing
+Features:
+Accept BTC payments with QR codes
+Accept USDT payments (Ethereum and Tron)
+Transaction monitoring and confirmation
+Basic payment status tracking
+Technical Considerations:
+Implement idempotent payment processing
+Monitor blockchain confirmations (BTC: 1-3, USDT: 1-3)
+Implement proper error handling and transaction rollback
+Use webhook pattern for payment notifications
+1.4 M-Pesa Integration
+Features:
+Basic M-Pesa B2C integration for settlements
+M-Pesa STK Push for buying crypto
+Webhook handling for M-Pesa callbacks
+Technical Considerations:
+Integrate with M-Pesa Daraja API
+Implement proper phone number validation for Kenya
+Secure webhook signature verification
+Handle M-Pesa transaction timeouts and retries
+2. Basic Frontend Interfaces
+2.1 Customer Web Portal
+Features:
+Mobile-responsive login and registration
+Basic wallet dashboard showing balances
+Send/receive crypto functionality
+Transaction history
+Technical Considerations:
+Implement using Next.js for SSR capabilities
+Use Tailwind CSS for responsive design
+Optimize for mobile browsers
+Implement PWA capabilities for offline access
+2.2 Merchant Dashboard
+Features:
+Payment acceptance interface
+QR code generation
+Basic transaction history
+Simple settlement tracking
+Technical Considerations:
+Implement using Next.js
+Focus on responsive design for both desktop and mobile
+Implement real-time updates for payment status
+2.3 Admin Panel
+Features:
+Basic user management
+Transaction monitoring
+System status overview
+Technical Considerations:
+Implement using React
+Focus on functionality over design
+Implement proper access controls
+3. Essential Security Features
+3.1 Authentication Security
+Features:
+Secure login with rate limiting
+Session management
+Password policies
+Technical Considerations:
+Implement proper CSRF protection
+Use HTTP-only cookies for session management
+Implement rate limiting for login attempts
+3.2 Wallet Security
+Features:
+Encrypted private key storage
+Transaction signing security
+Balance protection
+Technical Considerations:
+Use AES-256 encryption for private keys
+Implement proper key derivation with PBKDF2
+Never expose private keys to frontend
+3.3 API Security
+Features:
+Rate limiting
+Input validation
+Error handling
+Technical Considerations:
+Implement comprehensive input validation
+Use proper HTTP status codes
+Sanitize error messages to prevent information leakage
+4. Minimum Viable Integrations
+4.1 Blockchain Integrations
+Features:
+Bitcoin Core RPC integration
+Ethereum JSON-RPC integration
+Tron API integration
+Technical Considerations:
+Use reliable node providers (Infura, Alchemy, etc.)
+Implement proper error handling for node failures
+Cache blockchain data where appropriate
+4.2 Payment Integrations
+Features:
+M-Pesa integration
+Basic exchange rate API
+Technical Considerations:
+Implement fallback strategies for API failures
+Cache exchange rates with appropriate TTL
+Implement proper error handling
+Phase 2: Enhanced Features
+1. Additional Payment Methods
+1.1 Enhanced Crypto Support
+Features:
+Support for additional USDT networks (e.g., Binance Smart Chain)
+Lightning Network integration for Bitcoin
+Multi-signature wallet support for merchants
+Technical Considerations:
+Implement proper network selection logic
+Handle cross-chain transactions
+Implement Lightning Network payment channels
+1.2 Additional Fiat Options
+Features:
+Bank transfer integration
+Card payment options
+Additional mobile money providers
+Technical Considerations:
+Integrate with local bank APIs
+Implement card payment processing
+Support multiple mobile money providers
+2. Enhanced User Features
+2.1 Advanced Customer Features
+Features:
+Utility bill payments (KPLC, Water, DSTV)
+P2P transfers
+Recurring payments
+Portfolio tracking
+Technical Considerations:
+Integrate with utility payment APIs
+Implement scheduled payment processing
+Develop portfolio analytics algorithms
+2.2 Advanced Merchant Features
+Features:
+Sales analytics
+Customer management
+Customizable payment pages
+Settlement preferences
+Technical Considerations:
+Implement analytics data processing
+Develop customizable payment page generator
+Support multiple settlement options
+3. Advanced Security Features
+3.1 Enhanced Authentication
+Features:
+Two-factor authentication
+Biometric authentication
+Device management
+Technical Considerations:
+Implement TOTP-based 2FA
+Support WebAuthn for biometric authentication
+Track and manage trusted devices
+3.2 Advanced Wallet Security
+Features:
+Multi-signature support
+Hardware wallet integration
+Enhanced key recovery
+Technical Considerations:
+Implement multi-signature transaction signing
+Support hardware wallet interfaces
+Develop secure key recovery mechanisms
+3.3 Compliance Features
+Features:
+Enhanced KYC/AML
+Transaction monitoring
+Regulatory reporting
+Technical Considerations:
+Integrate with KYC/AML providers
+Implement transaction risk scoring
+Develop regulatory reporting tools
+Phase 3: Full Feature Set
+1. Complete Feature Implementation
+1.1 Advanced Payment Features
+Features:
+Smart routing between payment methods
+Dynamic fee optimization
+Payment splitting
+Technical Considerations:
+Implement payment routing algorithms
+Develop fee optimization strategies
+Support complex payment splitting scenarios
+1.2 Advanced Integration Features
+Features:
+E-commerce platform plugins
+POS system integration
+Accounting software integration
+Technical Considerations:
+Develop integration SDKs
+Support standard e-commerce platforms
+Implement accounting data export
+2. Advanced Analytics
+2.1 Business Intelligence
+Features:
+Advanced sales analytics
+Customer behavior analysis
+Market trend analysis
+Technical Considerations:
+Implement data warehousing
+Develop analytics processing pipelines
+Create visualization components
+2.2 Risk Management
+Features:
+Fraud detection
+Risk scoring
+Anomaly detection
+Technical Considerations:
+Implement machine learning models
+Develop real-time risk assessment
+Create alert mechanisms
+3. Optimization and Scaling
+3.1 Performance Optimization
+Features:
+API performance tuning
+Database optimization
+Frontend performance
+Technical Considerations:
+Implement database indexing strategies
+Optimize API response times
+Enhance frontend loading performance
+3.2 Scalability Enhancements
+Features:
+Horizontal scaling
+Load balancing
+Caching strategies
+Technical Considerations:
+Implement containerization
+Deploy to Kubernetes
+Implement Redis caching
+Technical Architecture
+System Components
+Qpeapay System
+
+Backend Services
+
+Frontend Applications
+
+Infrastructure
+
+Core API
+
+Blockchain Services
+
+Payment Processing
+
+Settlement Engine
+
+Security Services
+
+Customer Web Portal
+
+Merchant Dashboard
+
+Admin Panel
+
+Database
+
+Caching
+
+Message Queue
+
+Monitoring
+
+Bitcoin Service
+
+Ethereum Service
+
+Tron Service
+
+M-Pesa Service
+
+Payment Gateway
+
+Fee Service
+
+Settlement Service
+
+Exchange Rate Service
+
+Notification Service
+
+Data Flow
+MPesaService
+SettlementService
+PaymentService
+BlockchainService
+CoreAPI
+MerchantDashboard
+CustomerPortal
+Merchant
+Customer
+MPesaService
+SettlementService
+PaymentService
+BlockchainService
+CoreAPI
+MerchantDashboard
+CustomerPortal
+Merchant
+Customer
+Generate payment request
+Create payment request
+Return payment details with QR
+Share payment QR
+Scan QR code
+Get payment details
+Return payment details
+Confirm payment
+Initiate payment
+Execute blockchain transaction
+Return transaction hash
+Record payment
+Monitor transaction confirmations
+Update payment status
+Trigger settlement
+Initiate M-Pesa B2C
+Confirm settlement
+Update settlement status
+Notify payment received
+Update transaction history
+Database Schema
+Core Tables
+has
+
+makes
+
+can_be
+
+receives
+
+USERS
+
+uuid
+
+id
+
+PK
+
+string
+
+email
+
+string
+
+phone_number
+
+string
+
+account_type
+
+string
+
+kyc_status
+
+boolean
+
+is_active
+
+timestamp
+
+created_at
+
+WALLETS
+
+uuid
+
+id
+
+PK
+
+uuid
+
+user_id
+
+FK
+
+string
+
+network
+
+string
+
+address
+
+text
+
+encrypted_private_key
+
+decimal
+
+balance_usdt
+
+decimal
+
+balance_kes
+
+TRANSACTIONS
+
+uuid
+
+id
+
+PK
+
+uuid
+
+user_id
+
+FK
+
+string
+
+transaction_type
+
+decimal
+
+amount_usdt
+
+decimal
+
+amount_kes
+
+decimal
+
+exchange_rate
+
+string
+
+status
+
+string
+
+blockchain_hash
+
+string
+
+mpesa_reference
+
+timestamp
+
+created_at
+
+MERCHANTS
+
+uuid
+
+id
+
+PK
+
+uuid
+
+user_id
+
+FK
+
+string
+
+business_name
+
+string
+
+settlement_method
+
+string
+
+settlement_account
+
+string
+
+verification_level
+
+timestamp
+
+created_at
+
+SETTLEMENTS
+
+uuid
+
+id
+
+PK
+
+uuid
+
+merchant_id
+
+FK
+
+decimal
+
+amount_kes
+
+string
+
+status
+
+string
+
+mpesa_reference
+
+timestamp
+
+created_at
+
+Security Considerations
+Critical Security Measures
+Private Key Management
+
+Encrypted storage using AES-256
+Key derivation using PBKDF2 with high iteration count
+Secure key backup and recovery mechanisms
+Multi-signature support for high-value wallets
+Transaction Security
+
+Proper transaction signing
+Confirmation monitoring
+Double-spend prevention
+Transaction limits and velocity checks
+API Security
+
+Rate limiting
+Input validation
+HTTPS everywhere
+Proper authentication and authorization
+Data Security
+
+Field-level encryption for sensitive data
+Proper database security
+Data minimization
+Regular security audits
+Compliance
+
+KYC/AML procedures
+Transaction monitoring
+Regulatory reporting
+Audit trails
+Implementation Roadmap
+Phase 1: MVP (3 Months)
+Month 1: Foundation
+Set up development environment
+Implement core backend services
+Create database schema
+Implement basic security features
+Month 2: Core Features
+Implement wallet management
+Integrate with blockchain networks
+Implement basic payment processing
+Develop frontend interfaces
+Month 3: Integration & Testing
+Integrate with M-Pesa
+Implement settlement process
+Conduct security testing
+Prepare for MVP launch
+Phase 2: Enhancement (3 Months)
+Month 4: Additional Features
+Implement additional payment methods
+Enhance user features
+Improve security measures
+Month 5: Advanced Features
+Implement utility bill payments
+Enhance merchant features
+Improve analytics
+Month 6: Optimization
+Performance optimization
+User experience improvements
+Prepare for Phase 2 launch
+Phase 3: Expansion (3 Months)
+Month 7: Advanced Integration
+Implement e-commerce integrations
+Enhance API capabilities
+Develop SDK
+Month 8: Advanced Analytics
+Implement business intelligence
+Develop risk management
+Enhance reporting
+Month 9: Scaling
+Implement scalability enhancements
+Optimize performance
+Prepare for full launch
+Testing Strategy
+Testing Levels
+Unit Testing
+
+Test individual components
+Focus on business logic
+Ensure proper error handling
+Integration Testing
+
+Test component interactions
+Focus on API contracts
+Ensure proper data flow
+System Testing
+
+Test end-to-end flows
+Focus on user journeys
+Ensure proper system behavior
+Security Testing
+
+Penetration testing
+Vulnerability scanning
+Code review
+Performance Testing
+
+Load testing
+Stress testing
+Endurance testing
+Critical Test Cases
+Payment Processing
+
+Successful payment flow
+Failed payment handling
+Duplicate payment prevention
+Transaction confirmation monitoring
+Settlement Process
+
+Successful settlement
+Failed settlement handling
+Retry mechanisms
+Settlement reconciliation
+Security Features
+
+Authentication and authorization
+Rate limiting
+Input validation
+Encryption
+Mobile Responsiveness
+
+Different device sizes
+Different browsers
+Different network conditions
+Deployment Strategy
+Infrastructure
+Load Balancer
+
+API Server 1
+
+API Server 2
+
+API Server n
+
+Database Primary
+
+Database Replica 1
+
+Database Replica 2
+
+Redis Cache
+
+Message Queue
+
+Worker 1
+
+Worker 2
+
+Worker n
+
+CDN
+
+Frontend Server 1
+
+Frontend Server 2
+
+Frontend Server n
+
+CI/CD Pipeline
+Development
+
+Feature branches
+Pull requests
+Code review
+Automated testing
+Staging
+
+Integration testing
+Performance testing
+Security testing
+User acceptance testing
+Production
+
+Blue-green deployment
+Canary releases
+Monitoring
+Rollback capability
+Monitoring and Maintenance
+Monitoring
+System Monitoring
+
+Server health
+Database performance
+API performance
+Error rates
+Business Monitoring
+
+Transaction volume
+Settlement status
+User activity
+Revenue metrics
+Security Monitoring
+
+Authentication attempts
+API usage patterns
+Suspicious activities
+Compliance metrics
+Maintenance
+Regular Updates
+
+Security patches
+Dependency updates
+Feature enhancements
+Bug fixes
+Database Maintenance
+
+Regular backups
+Index optimization
+Data archiving
+Performance tuning
+Documentation
+
+API documentation
+User guides
+Developer documentation
+Compliance documentation

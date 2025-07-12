@@ -1,0 +1,72 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Authentication and Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==41.0.7
+
+# Validation and Serialization
+pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# HTTP Client
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Caching
+redis==5.0.1
+aioredis==2.0.1
+
+# Background Tasks
+celery==5.3.4
+kombu==5.3.4
+
+# Monitoring and Logging
+structlog==23.2.0
+sentry-sdk[fastapi]==1.38.0
+pythonjsonlogger==2.0.7
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Development
+pip-tools==7.4.1
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Environment
+python-dotenv==1.0.0
+
+# Rate Limiting
+slowapi==0.1.9
+
+# Phone number validation
+phonenumbers==8.13.26
+
+# QR Code generation
+qrcode[pil]==7.4.2
+
+# Encryption utilities
+bcrypt==4.1.2
+
+# UUID utilities
+uuid==1.30
+
+# Date utilities
+python-dateutil==2.8.2
+
+# Decimal handling
+decimal==1.70
