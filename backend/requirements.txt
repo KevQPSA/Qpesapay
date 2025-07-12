@@ -6,7 +6,7 @@ python-multipart==0.0.6
 sqlalchemy==2.0.23
 alembic==1.12.1
 asyncpg==0.29.0
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.9  # For Alembic migrations (sync driver)
 
 # Authentication and Security
 python-jose[cryptography]==3.3.0
@@ -33,7 +33,7 @@ kombu==5.3.4
 # Monitoring and Logging
 structlog==23.2.0
 sentry-sdk[fastapi]==1.38.0
-pythonjsonlogger==2.0.7
+python-json-logger==2.0.7
 
 # Testing
 pytest==7.4.3
@@ -62,11 +62,5 @@ qrcode[pil]==7.4.2
 # Encryption utilities
 bcrypt==4.1.2
 
-# UUID utilities
-uuid==1.30
-
 # Date utilities
 python-dateutil==2.8.2
-
-# Decimal handling
-decimal==1.70

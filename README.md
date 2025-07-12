@@ -217,3 +217,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ for the Kenyan fintech ecosystem**
+#   B r a n c h   P r o t e c t i o n   T e s t   C o m p l e t e d  
+ 

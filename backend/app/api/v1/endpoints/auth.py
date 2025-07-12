@@ -3,7 +3,7 @@ Authentication endpoints for QPesaPay backend.
 Handles user registration, login, and token management.
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
