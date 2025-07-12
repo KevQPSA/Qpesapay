@@ -7,7 +7,11 @@ Following Sandi Metz principles: small, focused, testable.
 from typing import List
 from decimal import Decimal
 from app.domain import PaymentRequest, Money, Currency
-from app.core.exceptions import ValidationError
+
+
+class ValidationError(ValueError):
+    """Simple validation error for payment validation."""
+    pass
 
 
 class PaymentValidator:

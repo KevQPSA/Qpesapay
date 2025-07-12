@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from app.domain import Money, Currency, Address, PaymentRequest
 from app.services.payment import PaymentValidator, FeeEstimator, StaticFeeProvider
-from app.core.exceptions import ValidationError
+from app.services.payment.validator import ValidationError
 
 
 class TestPaymentValidator:

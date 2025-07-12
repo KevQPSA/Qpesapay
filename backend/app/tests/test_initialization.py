@@ -18,7 +18,7 @@ def test_read_root():
 def test_config_loads():
     """Test if configuration loads properly."""
     assert settings is not None
-    assert settings.PROJECT_NAME == "Qpeasa"  # Match actual config value
+    assert settings.PROJECT_NAME == "QPesaPay"  # Match actual config value
     assert settings.API_V1_STR == "/api/v1"
 
 @pytest.mark.asyncio
