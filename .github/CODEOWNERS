@@ -1,16 +1,19 @@
 # QPesaPay Code Owners
 # This file defines who must review changes to specific parts of the codebase
 # For financial applications, critical components require mandatory reviews
+#
+# Note: Currently configured for single maintainer (@KevQPSA)
+# When adding team members, update usernames accordingly
 
 # Global fallback - all files require review from repository owner
 * @KevQPSA
 
-# Critical Security Components - Require security team review
+# Critical Security Components - Extra scrutiny required
 backend/app/core/security.py @KevQPSA
 backend/app/core/middleware.py @KevQPSA
 backend/app/services/auth_service.py @KevQPSA
 
-# Financial Services - Require financial domain expert review
+# Financial Services - Critical financial logic
 backend/app/services/payment_service.py @KevQPSA
 backend/app/services/blockchain_service.py @KevQPSA
 backend/app/services/mpesa_service.py @KevQPSA
@@ -18,28 +21,24 @@ backend/app/models/transaction.py @KevQPSA
 backend/app/models/wallet.py @KevQPSA
 backend/app/models/settlement.py @KevQPSA
 
-# Database Migrations - Require DBA review
+# Database Migrations - Schema changes
 backend/alembic/versions/ @KevQPSA
 backend/app/models/ @KevQPSA
 
-# Configuration Files - Require DevOps review
+# Configuration Files - Infrastructure changes
 docker/ @KevQPSA
 .github/workflows/ @KevQPSA
 backend/app/config.py @KevQPSA
 
-# API Endpoints - Require backend team review
+# API Endpoints - Public interface changes
 backend/app/api/ @KevQPSA
 backend/app/schemas/ @KevQPSA
 
-# Documentation - Can be reviewed by any maintainer
-*.md @KevQPSA
-docs/ @KevQPSA
-
-# Environment and Secrets - Require security review
+# Environment and Secrets - Security sensitive
 *.env.example @KevQPSA
 backend/.env.example @KevQPSA
 
-# Testing - Require QA review
+# Testing - Quality assurance
 backend/app/tests/ @KevQPSA
 */tests/ @KevQPSA
 *test*.py @KevQPSA
