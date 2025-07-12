@@ -3,7 +3,7 @@ Transaction schemas for Qpesapay backend.
 Pydantic models for transaction-related API requests and responses.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
@@ -19,16 +19,17 @@ class TransactionBase(BaseModel):
     amount_kes: Optional[Decimal] = Field(None, gt=0, description="Amount in KES")
     description: Optional[str] = Field(None, max_length=500, description="Transaction description")
     
-    @validator('amount_crypto', 'amount_kes')
+    @field_validator('amount_crypto', 'amount_kes')
+    @classmethod
     def validate_amounts(cls, v):
         """Validate transaction amounts."""
         if v is not None and v <= 0:
             raise ValueError('Amount must be positive')
-        
+
         # Check for reasonable precision
         if v is not None and v.as_tuple().exponent < -8:
             raise ValueError('Amount has too many decimal places')
-        
+
         return v
 
 
@@ -41,30 +42,32 @@ class PaymentCreate(BaseModel):
     description: Optional[str] = Field(None, max_length=500, description="Payment description")
     fee_rate: Optional[Decimal] = Field(None, ge=0, description="Custom fee rate")
     
-    @validator('to_address')
+    @field_validator('to_address')
+    @classmethod
     def validate_address(cls, v):
         """Validate recipient address format."""
         if not v.strip():
             raise ValueError('Recipient address cannot be empty')
-        
+
         address = v.strip()
-        
+
         # Basic validation - more specific validation would be done in the service layer
         if len(address) < 26 or len(address) > 62:
             raise ValueError('Invalid address format')
-        
+
         return address
-    
-    @validator('amount_crypto')
+
+    @field_validator('amount_crypto')
+    @classmethod
     def validate_amount(cls, v):
         """Validate payment amount."""
         if v <= 0:
             raise ValueError('Amount must be greater than zero')
-        
+
         # Check for reasonable precision (8 decimal places max)
         if v.as_tuple().exponent < -8:
             raise ValueError('Amount has too many decimal places')
-        
+
         return v
 
 
@@ -75,7 +78,8 @@ class SettlementCreate(BaseModel):
     settlement_method: str = Field(..., description="Settlement method (mpesa, bank_transfer)")
     description: Optional[str] = Field(None, max_length=500, description="Settlement description")
     
-    @validator('settlement_method')
+    @field_validator('settlement_method')
+    @classmethod
     def validate_settlement_method(cls, v):
         """Validate settlement method."""
         valid_methods = ['mpesa', 'bank_transfer', 'crypto_wallet']
@@ -92,14 +96,16 @@ class BillPaymentCreate(BaseModel):
     payment_method: PaymentMethod = Field(..., description="Payment method")
     description: Optional[str] = Field(None, max_length=500, description="Bill payment description")
     
-    @validator('bill_provider')
+    @field_validator('bill_provider')
+    @classmethod
     def validate_provider(cls, v):
         """Validate bill provider."""
         if not v.strip():
             raise ValueError('Bill provider cannot be empty')
         return v.strip().upper()
     
-    @validator('bill_account_number')
+    @field_validator('bill_account_number')
+    @classmethod
     def validate_account_number(cls, v):
         """Validate bill account number."""
         if not v.strip():
@@ -214,21 +220,20 @@ class TransactionSearch(BaseModel):
     blockchain_hash: Optional[str] = Field(None, description="Filter by blockchain hash")
     reference_number: Optional[str] = Field(None, description="Filter by reference number")
     
-    @validator('max_amount')
-    def validate_amount_range(cls, v, values):
-        """Validate amount range."""
-        min_amount = values.get('min_amount')
-        if min_amount is not None and v is not None and v < min_amount:
-            raise ValueError('Maximum amount must be greater than minimum amount')
-        return v
-    
-    @validator('to_date')
-    def validate_date_range(cls, v, values):
-        """Validate date range."""
-        from_date = values.get('from_date')
-        if from_date is not None and v is not None and v < from_date:
-            raise ValueError('End date must be after start date')
-        return v
+    @model_validator(mode='after')
+    def validate_ranges(self):
+        """Validate amount and date ranges."""
+        # Validate amount range
+        if self.min_amount is not None and self.max_amount is not None:
+            if self.max_amount < self.min_amount:
+                raise ValueError('Maximum amount must be greater than minimum amount')
+
+        # Validate date range
+        if self.from_date is not None and self.to_date is not None:
+            if self.to_date < self.from_date:
+                raise ValueError('End date must be after start date')
+
+        return self
 
 
 class TransactionExport(BaseModel):
@@ -237,7 +242,8 @@ class TransactionExport(BaseModel):
     filters: Optional[TransactionSearch] = Field(None, description="Export filters")
     include_sensitive: bool = Field(False, description="Include sensitive data")
     
-    @validator('format')
+    @field_validator('format')
+    @classmethod
     def validate_format(cls, v):
         """Validate export format."""
         valid_formats = ['csv', 'xlsx', 'pdf']
@@ -286,7 +292,8 @@ class TransactionCancel(BaseModel):
     """Schema for cancelling a transaction."""
     reason: str = Field(..., max_length=500, description="Cancellation reason")
     
-    @validator('reason')
+    @field_validator('reason')
+    @classmethod
     def validate_reason(cls, v):
         """Validate cancellation reason."""
         if not v.strip():

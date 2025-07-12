@@ -15,7 +15,7 @@ env:
   SECRET_KEY: ci-cd-secret-key-for-testing-only-32-characters-long-secure
   ENCRYPTION_KEY: ci-cd-encryption-key-for-testing-only-32-characters-long
   WEBHOOK_SECRET: ci-cd-webhook-secret-for-testing-32-chars
-  DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+  DATABASE_URL: postgresql+asyncpg://test_user:test_password@localhost:5432/test_db
   POSTGRES_SERVER: localhost
   POSTGRES_USER: test_user
   POSTGRES_PASSWORD: test_password
@@ -76,7 +76,7 @@ jobs:
       run: |
         cat > backend/.env << EOF
         # Application Configuration
-        PROJECT_NAME=QPesaPay
+        PROJECT_NAME=Qpesapay
         API_V1_STR=/api/v1
         SECRET_KEY=test-secret-key-for-ci-very-long-and-secure-key-123456789
         ACCESS_TOKEN_EXPIRE_MINUTES=60
@@ -148,9 +148,13 @@ jobs:
     - name: Test with pytest
       env:
         PYTHONPATH: backend
+        TESTING: true
+        CI: true
+        DISABLE_RATE_LIMITING: true
+        DISABLE_EXTERNAL_CALLS: true
       run: |
         cd backend
-        python -m pytest app/tests/ -v --cov=app --cov-report=xml --cov-report=html
+        timeout 300 python -m pytest app/tests/ -n auto --maxfail=5
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

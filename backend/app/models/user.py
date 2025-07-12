@@ -224,7 +224,7 @@ class User(Base):
         """Check if user account is locked."""
         if not self.locked_until:
             return False
-        return datetime.utcnow() < self.locked_until
+        return datetime.now(timezone.utc) < self.locked_until
     
     @property
     def is_fully_verified(self) -> bool:
@@ -269,23 +269,23 @@ class User(Base):
         
         # Lock account after 5 failed attempts for 30 minutes
         if current_attempts >= 5:
-            self.locked_until = datetime.utcnow() + timedelta(minutes=30)
+            self.locked_until = datetime.now(timezone.utc) + timedelta(minutes=30)
     
     def reset_failed_login_attempts(self):
         """Reset failed login attempts after successful login."""
         self.failed_login_attempts = "0"
         self.locked_until = None
-        self.last_login_at = datetime.utcnow()
+        self.last_login_at = datetime.now(timezone.utc)
     
     def update_last_login(self, ip_address: str):
         """Update last login information."""
-        self.last_login_at = datetime.utcnow()
+        self.last_login_at = datetime.now(timezone.utc)
         self.last_login_ip = ip_address
         self.reset_failed_login_attempts()
     
     def soft_delete(self):
         """Soft delete the user account."""
-        self.deleted_at = datetime.utcnow()
+        self.deleted_at = datetime.now(timezone.utc)
         self.is_active = False
     
     def restore(self):

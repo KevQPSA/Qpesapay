@@ -23,4 +23,4 @@ def test_root_endpoint():
     # Update expectation to match actual response
     json_response = response.json()
     assert "message" in json_response
-    assert "QPesaPay" in json_response["message"]
+    assert "Qpesapay" in json_response["message"]
