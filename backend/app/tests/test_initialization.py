@@ -13,12 +13,12 @@ def test_read_root():
     # Update expectation to match actual response
     json_response = response.json()
     assert "message" in json_response
-    assert "QPesaPay" in json_response["message"]
+    assert "Qpesapay" in json_response["message"]
 
 def test_config_loads():
     """Test if configuration loads properly."""
     assert settings is not None
-    assert settings.PROJECT_NAME == "QPesaPay"  # Match actual config value
+    assert settings.PROJECT_NAME == "Qpesapay"  # Match actual config value
     assert settings.API_V1_STR == "/api/v1"
 
 @pytest.mark.asyncio

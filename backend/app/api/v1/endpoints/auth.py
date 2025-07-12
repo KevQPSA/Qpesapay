@@ -77,9 +77,10 @@ async def register_user(
             raise HTTPConflictError("Phone number already registered")
         
         # Validate password strength
-        if not validate_password_strength(user_data.password):
+        is_valid, errors = validate_password_strength(user_data.password)
+        if not is_valid:
             raise HTTPValidationError(
-                "Password must contain at least 8 characters with uppercase, lowercase, digit, and special character"
+                f"Password validation failed: {'; '.join(errors)}"
             )
         
         # Create user
@@ -380,9 +381,10 @@ async def change_password(
             raise HTTPAuthenticationError("Current password is incorrect")
         
         # Validate new password strength
-        if not validate_password_strength(password_data.new_password):
+        is_valid, errors = validate_password_strength(password_data.new_password)
+        if not is_valid:
             raise HTTPValidationError(
-                "Password must contain at least 8 characters with uppercase, lowercase, digit, and special character"
+                f"Password validation failed: {'; '.join(errors)}"
             )
         
         # Update password

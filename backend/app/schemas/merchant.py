@@ -5,7 +5,7 @@ from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.merchant import MerchantStatus
 
@@ -68,7 +68,8 @@ class MerchantSettings(BaseModel):
     settlement_schedule: Optional[str] = Field(None, description="Settlement schedule (daily, weekly, monthly)")
     notification_preferences: Dict[str, bool] = Field(default_factory=dict, description="Notification preferences")
     
-    @validator('webhook_url')
+    @field_validator('webhook_url')
+    @classmethod
     def validate_webhook_url(cls, v):
         if v and not v.startswith(('http://', 'https://')):
             raise ValueError('Webhook URL must start with http:// or https://')
@@ -83,7 +84,8 @@ class MerchantSettingsUpdate(BaseModel):
     settlement_schedule: Optional[str] = None
     notification_preferences: Optional[Dict[str, bool]] = None
     
-    @validator('webhook_url')
+    @field_validator('webhook_url')
+    @classmethod
     def validate_webhook_url(cls, v):
         if v and not v.startswith(('http://', 'https://')):
             raise ValueError('Webhook URL must start with http:// or https://')

@@ -5,7 +5,7 @@ from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.settlement import SettlementStatus, SettlementType
 
@@ -26,7 +26,8 @@ class SettlementCreate(SettlementBase):
     amount: Decimal = Field(..., gt=0, description="Settlement amount")
     fee: Decimal = Field(default=Decimal('0'), ge=0, description="Settlement fee")
     
-    @validator('amount', 'fee')
+    @field_validator('amount', 'fee')
+    @classmethod
     def validate_decimal_places(cls, v):
         if v.as_tuple().exponent < -8:
             raise ValueError('Maximum 8 decimal places allowed')
@@ -112,14 +113,16 @@ class SettlementSchedule(BaseModel):
     minimum_amount: Decimal = Field(default=Decimal('0'), ge=0, description="Minimum amount for settlement")
     is_active: bool = Field(default=True, description="Whether schedule is active")
     
-    @validator('schedule_type')
+    @field_validator('schedule_type')
+    @classmethod
     def validate_schedule_type(cls, v):
         allowed_types = ['daily', 'weekly', 'monthly']
         if v not in allowed_types:
             raise ValueError(f'Schedule type must be one of: {", ".join(allowed_types)}')
         return v
-    
-    @validator('schedule_time')
+
+    @field_validator('schedule_time')
+    @classmethod
     def validate_schedule_time(cls, v):
         try:
             hour, minute = map(int, v.split(':'))
@@ -137,15 +140,17 @@ class SettlementScheduleUpdate(BaseModel):
     minimum_amount: Optional[Decimal] = None
     is_active: Optional[bool] = None
     
-    @validator('schedule_type')
+    @field_validator('schedule_type')
+    @classmethod
     def validate_schedule_type(cls, v):
         if v is not None:
             allowed_types = ['daily', 'weekly', 'monthly']
             if v not in allowed_types:
                 raise ValueError(f'Schedule type must be one of: {", ".join(allowed_types)}')
         return v
-    
-    @validator('schedule_time')
+
+    @field_validator('schedule_time')
+    @classmethod
     def validate_schedule_time(cls, v):
         if v is not None:
             try:

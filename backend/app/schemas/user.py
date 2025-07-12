@@ -3,7 +3,7 @@ User schemas for QPesaPay backend.
 Pydantic models for user-related API requests and responses.
 """
 
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, Dict, Any
 from datetime import datetime, date
 from uuid import UUID
@@ -22,8 +22,9 @@ class UserBase(BaseModel):
     phone_number: str = Field(..., min_length=10, max_length=20, description="Phone number")
     first_name: Optional[str] = Field(None, min_length=1, max_length=100, description="First name")
     last_name: Optional[str] = Field(None, min_length=1, max_length=100, description="Last name")
-    
-    @validator('email')
+
+    @field_validator('email')
+    @classmethod
     def validate_email(cls, v):
         """Validate email address using secure validation."""
         try:
@@ -31,7 +32,8 @@ class UserBase(BaseModel):
         except ValidationError as e:
             raise ValueError(str(e))
 
-    @validator('phone_number')
+    @field_validator('phone_number')
+    @classmethod
     def validate_phone(cls, v):
         """Validate phone number using secure validation."""
         try:
@@ -39,7 +41,8 @@ class UserBase(BaseModel):
         except ValidationError as e:
             raise ValueError(str(e))
     
-    @validator('first_name', 'last_name')
+    @field_validator('first_name', 'last_name')
+    @classmethod
     def validate_names(cls, v):
         """Validate name fields using secure sanitization."""
         if v is None:
@@ -66,7 +69,8 @@ class UserCreate(UserBase):
     preferred_language: str = Field(default="en", description="Preferred language")
     preferred_currency: str = Field(default="KES", description="Preferred currency")
 
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password_strength(cls, v):
         """Validate password using secure validation."""
         try:
@@ -74,35 +78,17 @@ class UserCreate(UserBase):
         except ValidationError as e:
             raise ValueError(str(e))
     
-    @validator('password')
-    def validate_password(cls, v):
-        """Validate password strength."""
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        
-        if not re.search(r'[A-Z]', v):
-            raise ValueError('Password must contain at least one uppercase letter')
-        
-        if not re.search(r'[a-z]', v):
-            raise ValueError('Password must contain at least one lowercase letter')
-        
-        if not re.search(r'\d', v):
-            raise ValueError('Password must contain at least one digit')
-        
-        if not re.search(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]', v):
-            raise ValueError('Password must contain at least one special character')
-        
-        return v
-    
-    @validator('preferred_language')
+    @field_validator('preferred_language')
+    @classmethod
     def validate_language(cls, v):
         """Validate language code."""
         valid_languages = ['en', 'sw']  # English, Swahili
         if v not in valid_languages:
             raise ValueError(f'Language must be one of: {", ".join(valid_languages)}')
         return v
-    
-    @validator('preferred_currency')
+
+    @field_validator('preferred_currency')
+    @classmethod
     def validate_currency(cls, v):
         """Validate currency code."""
         valid_currencies = ['KES', 'USD', 'BTC', 'USDT']
@@ -125,14 +111,16 @@ class UserUpdate(BaseModel):
     preferred_currency: Optional[str] = None
     notification_preferences: Optional[Dict[str, bool]] = None
     
-    @validator('phone_number')
+    @field_validator('phone_number')
+    @classmethod
     def validate_phone_number(cls, v):
         """Validate phone number format."""
         if v is None:
             return v
-        return UserBase.validate_phone_number(v)
-    
-    @validator('date_of_birth')
+        return UserBase.validate_phone(v)
+
+    @field_validator('date_of_birth')
+    @classmethod
     def validate_date_of_birth(cls, v):
         """Validate date of birth."""
         if v is None:
@@ -160,7 +148,8 @@ class UserKYCUpdate(BaseModel):
     city: str = Field(..., min_length=2, max_length=100)
     id_number: str = Field(..., min_length=5, max_length=50, description="National ID number")
     
-    @validator('date_of_birth')
+    @field_validator('date_of_birth')
+    @classmethod
     def validate_date_of_birth(cls, v):
         """Validate date of birth for KYC."""
         today = date.today()
@@ -174,7 +163,8 @@ class UserKYCUpdate(BaseModel):
         
         return v
     
-    @validator('id_number')
+    @field_validator('id_number')
+    @classmethod
     def validate_id_number(cls, v):
         """Validate ID number format."""
         # Remove any spaces or special characters
@@ -193,17 +183,22 @@ class PasswordChange(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=128, description="New password")
     confirm_password: str = Field(..., description="Confirm new password")
     
-    @validator('new_password')
+    @field_validator('new_password')
+    @classmethod
     def validate_new_password(cls, v):
         """Validate new password strength."""
-        return UserCreate.validate_password(v)
-    
-    @validator('confirm_password')
-    def validate_confirm_password(cls, v, values):
+        try:
+            return validate_password(v)
+        except ValidationError as e:
+            raise ValueError(str(e))
+
+    @model_validator(mode='after')
+    def validate_passwords_match(self):
         """Validate password confirmation."""
-        if 'new_password' in values and v != values['new_password']:
-            raise ValueError('Passwords do not match')
-        return v
+        if self.new_password and self.confirm_password:
+            if self.new_password != self.confirm_password:
+                raise ValueError('Passwords do not match')
+        return self
 
 
 class UserLogin(BaseModel):
@@ -299,17 +294,22 @@ class PasswordResetConfirm(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=128, description="New password")
     confirm_password: str = Field(..., description="Confirm new password")
     
-    @validator('new_password')
+    @field_validator('new_password')
+    @classmethod
     def validate_new_password(cls, v):
         """Validate new password strength."""
-        return UserCreate.validate_password(v)
-    
-    @validator('confirm_password')
-    def validate_confirm_password(cls, v, values):
+        try:
+            return validate_password(v)
+        except ValidationError as e:
+            raise ValueError(str(e))
+
+    @model_validator(mode='after')
+    def validate_passwords_match(self):
         """Validate password confirmation."""
-        if 'new_password' in values and v != values['new_password']:
-            raise ValueError('Passwords do not match')
-        return v
+        if self.new_password and self.confirm_password:
+            if self.new_password != self.confirm_password:
+                raise ValueError('Passwords do not match')
+        return self
 
 
 class TwoFactorSetup(BaseModel):

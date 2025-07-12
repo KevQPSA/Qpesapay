@@ -93,7 +93,7 @@ def validate_email_address(email: str) -> str:
         
         # Validate email format
         valid = validate_email(email)
-        return valid.email.lower()
+        return valid.normalized
         
     except EmailNotValidError as e:
         raise ValidationError(f"Invalid email address: {str(e)}")

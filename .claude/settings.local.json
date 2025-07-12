@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allowFileOperations": true,
+    "allowNetworkAccess": true,
+    "allowProcessExecution": true,
+    "allowEnvironmentAccess": true
+  },
+  "features": {
+    "contextEngineering": true,
+    "financialSystemValidation": true,
+    "blockchainIntegration": true,
+    "complianceChecks": true,
+    "webMcpIntegration": true,
+    "browserBasedDevelopment": true
+  },
+  "project": {
+    "name": "Qpesapay",
+    "type": "financial-payment-processor",
+    "domain": "crypto-fiat-payments",
+    "market": "kenya",
+    "compliance": ["CBK", "CMA", "KYC", "AML"]
+  },
+  "webMcp": {
+    "enabled": true,
+    "serverName": "qpesapay-financial-system",
+    "version": "1.0.0",
+    "tools": [
+      "payment-processing",
+      "compliance-checking",
+      "blockchain-monitoring",
+      "mpesa-integration",
+      "real-time-validation"
+    ]
+  }
+}
