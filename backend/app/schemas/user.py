@@ -22,7 +22,7 @@ class UserBase(BaseModel):
     phone_number: str = Field(..., min_length=10, max_length=20, description="Phone number")
     first_name: Optional[str] = Field(None, min_length=1, max_length=100, description="First name")
     last_name: Optional[str] = Field(None, min_length=1, max_length=100, description="Last name")
-    
+
     @field_validator('email')
     @classmethod
     def validate_email(cls, v):

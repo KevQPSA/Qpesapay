@@ -158,7 +158,7 @@ class TestPaymentSecurity:
         response = client.post("/api/v1/payments/create", json=payment_data)
         # Should require authentication - could be 401 (unauthorized) or 403 (forbidden)
         assert response.status_code in [401, 403]
-    
+
     @patch('app.api.v1.endpoints.payments.get_current_user')
     def test_payment_authorization_check(self, mock_get_user):
         """Test payment authorization (user can only create for themselves)."""
