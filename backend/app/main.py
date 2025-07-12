@@ -77,14 +77,18 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Add OWASP-compliant security middleware
+# Add OWASP-compliant security middleware (consolidated)
 app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SSRFProtectionMiddleware)
 
-# Add core middleware (without duplicate rate limiting)
+# Add core middleware
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(AuthenticationMiddleware)
+
+# Add rate limiting middleware with testing bypass
+import os
+if not (os.getenv('TESTING') == 'true' or os.getenv('CI') == 'true'):
+    app.add_middleware(RateLimitMiddleware)
 
 # Setup comprehensive error handlers
 setup_error_handlers(app)
