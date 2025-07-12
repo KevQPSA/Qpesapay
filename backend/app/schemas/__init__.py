@@ -1,6 +1,6 @@
 """Schemas package for QPesaPay backend."""
 
-from .user import UserCreate, UserUpdate, User, UserInDB
+from .user import UserCreate, UserUpdate, UserResponse, UserProfile
 from .wallet import WalletCreate, WalletUpdate, WalletResponse
 from .transaction import (
     PaymentCreate, 
@@ -35,8 +35,9 @@ from .mpesa import MpesaSTKPushRequest
 
 __all__ = [
     "UserCreate",
-    "UserUpdate", 
-    "User",
+    "UserUpdate",
+    "UserResponse",
+    "UserProfile",
     "WalletCreate",
     "WalletUpdate",
     "WalletResponse",
