@@ -11,7 +11,16 @@ import time
 from pathlib import Path
 
 def run_test_group(test_path, timeout=120):
-    """Run a specific test group with timeout."""
+    """
+    Runs a specified test group using pytest with a configurable timeout.
+    
+    Parameters:
+        test_path (str): Path to the test file, class, or method to execute.
+        timeout (int, optional): Maximum time in seconds to allow the test group to run. Defaults to 120.
+    
+    Returns:
+        tuple: (success (bool), duration (float)). Returns True and the test duration if the test completes successfully; otherwise, returns False and the timeout value or 0 on error.
+    """
     print(f"\n{'='*60}")
     print(f"Running: {test_path}")
     print(f"Timeout: {timeout}s")
@@ -59,7 +68,11 @@ def run_test_group(test_path, timeout=120):
         return False, 0
 
 def main():
-    """Run tests in groups to identify timeout issues."""
+    """
+    Runs all defined test groups, reporting pass/fail status and timing to help identify which groups cause timeouts or failures in CI/CD environments.
+    
+    Sets up a simulated CI environment, executes each test group with a timeout, collects results, and prints a summary of outcomes and durations. Returns 0 if all groups pass, otherwise 1.
+    """
     
     # Set environment variables
     os.environ['TESTING'] = 'true'

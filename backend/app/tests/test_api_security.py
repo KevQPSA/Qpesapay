@@ -34,7 +34,9 @@ class TestAuthenticationEndpoints:
     """Test authentication endpoint security."""
 
     def test_registration_rate_limiting(self, isolated_test_env):
-        """Test registration rate limiting."""
+        """
+        Tests that the registration endpoint enforces rate limiting by sending multiple registration requests with unique user data and asserting that responses include expected status codes, including 429 for rate limiting.
+        """
         user_data = {
             "email": "test@gmail.com",
             "phone_number": "0712345678",
@@ -316,7 +318,9 @@ class TestRateLimiting:
     """Test rate limiting across endpoints."""
 
     def test_auth_endpoint_rate_limiting(self, isolated_test_env):
-        """Test authentication endpoints have rate limiting."""
+        """
+        Verify that authentication endpoints enforce rate limiting by sending multiple failed login attempts and asserting appropriate error or rate limit responses.
+        """
         # Test actual rate limiting behavior in CI/CD environment
 
         login_data = {
@@ -338,7 +342,11 @@ class TestRateLimiting:
 
 @pytest.mark.asyncio
 async def test_complete_security_flow():
-    """Test complete security flow from registration to payment."""
+    """
+    Placeholder for a comprehensive integration test covering the full security flow from user registration to payment.
+    
+    This test is intended to validate all major security checks in a typical user journey, but currently only serves as a stub.
+    """
     # This would test a complete user journey with security checks
     # 1. Register user with strong password
     # 2. Login and get tokens
@@ -353,12 +361,16 @@ class TestAPIDocumentation:
     """Test API documentation accuracy."""
 
     def test_openapi_docs_accessible(self):
-        """Test OpenAPI documentation is accessible."""
+        """
+        Verify that the OpenAPI documentation endpoint is accessible and returns a successful response.
+        """
         response = client.get("/docs")
         assert response.status_code == 200
 
     def test_api_schema_validation(self):
-        """Test API responses match OpenAPI schema."""
+        """
+        Verify that authentication endpoint error responses conform to the expected OpenAPI error schema, ensuring consistent error formatting.
+        """
         # Test auth endpoints return proper schema
         response = client.post("/api/v1/auth/login", json={
             "email": "test@example.com",
@@ -375,13 +387,17 @@ class TestCORSPolicy:
     """Test CORS policy enforcement."""
 
     def test_cors_headers_present(self):
-        """Test CORS headers are present."""
+        """
+        Verify that the authentication login endpoint correctly handles OPTIONS requests, indicating CORS support by returning a 200 or 405 status code.
+        """
         response = client.options("/api/v1/auth/login")
         # Should handle OPTIONS request
         assert response.status_code in [200, 405]
 
     def test_cors_origin_validation(self):
-        """Test CORS origin validation."""
+        """
+        Verifies that the authentication endpoint properly handles requests with a malicious Origin header, ensuring CORS origin validation is enforced.
+        """
         headers = {"Origin": "https://malicious-site.com"}
         response = client.get("/api/v1/auth/login", headers=headers)
         # Should handle cross-origin requests appropriately
@@ -392,7 +408,11 @@ class TestJWTTokenSecurity:
     """Test JWT token security scenarios."""
 
     def test_expired_token_handling(self):
-        """Test expired token handling."""
+        """
+        Tests that access with an invalid or expired JWT token is rejected by the user info endpoint.
+        
+        Asserts that the server responds with an appropriate unauthorized or validation error status code.
+        """
         # This would require creating an expired token
         # For now, test with invalid token format
         headers = {"Authorization": "Bearer invalid-token-format"}
@@ -400,7 +420,11 @@ class TestJWTTokenSecurity:
         assert response.status_code in [401, 422]
 
     def test_token_in_url_rejected(self):
-        """Test tokens in URL are rejected."""
+        """
+        Verify that authentication tokens passed as URL query parameters are rejected by the API.
+        
+        Asserts that the endpoint does not accept tokens in the URL, returning an unauthorized or validation error status code.
+        """
         response = client.get("/api/v1/users/me?token=some-token")
         # Should not accept tokens in URL for security
         assert response.status_code in [401, 422]
@@ -410,14 +434,22 @@ class TestAuthorizationSecurity:
     """Test authorization and access control."""
 
     def test_user_data_isolation(self):
-        """Test users can't access other users' data."""
+        """
+        Verify that accessing user data without proper authorization is rejected.
+        
+        Asserts that requests to the user data endpoint without authentication result in an unauthorized or validation error response.
+        """
         # This would require creating test users and tokens
         # For now, test without proper authorization
         response = client.get("/api/v1/users/me")
         assert response.status_code in [401, 422]
 
     def test_payment_authorization(self):
-        """Test payment creation requires proper authorization."""
+        """
+        Verify that creating a payment without proper authorization is rejected.
+        
+        Asserts that the payment creation endpoint returns an appropriate error status when attempted without valid authentication or authorization.
+        """
         payment_data = {
             "user_id": "different-user-id",
             "amount": "100.00",
