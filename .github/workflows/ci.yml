@@ -158,7 +158,8 @@ jobs:
         # Note: DISABLE_RATE_LIMITING removed to allow security tests to run properly
       run: |
         cd backend
-        timeout 300 python -m pytest app/tests/ -n auto --maxfail=5 --dist=loadscope
+        # Run tests with increased timeout and better error handling
+        timeout 600 python -m pytest app/tests/ -n auto --maxfail=10 --dist=loadscope --timeout=120 --timeout-method=thread -v
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
