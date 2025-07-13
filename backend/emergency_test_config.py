@@ -50,9 +50,11 @@ def apply_emergency_patches():
     Apply emergency patches to prevent hanging
     """
     # Patch slow operations
-    with patch('time.sleep', return_value=None):
-        with patch('asyncio.sleep', return_value=None):
-            print("Emergency patches applied")
+    time_patch = patch('time.sleep', return_value=None)
+    asyncio_patch = patch('asyncio.sleep', return_value=None)
+    time_patch.start()
+    asyncio_patch.start()
+    print("Emergency patches applied")
 
 if __name__ == "__main__":
     setup_emergency_test_environment()

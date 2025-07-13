@@ -79,7 +79,7 @@ class WalletImport(BaseModel):
         private_key = v.strip()
         
         # Basic validation for hex format (64 characters for most blockchains)
-        if not re.match(r'^[0-9a-fA-F]{64}$', private_key):
+        if not re.match(r'^[0-9a-fA-F]{64}$', private_key) or len(private_key) < 64:
             raise ValueError('Invalid private key format')
         
         return private_key

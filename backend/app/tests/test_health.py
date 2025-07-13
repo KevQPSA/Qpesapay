@@ -7,7 +7,9 @@ from app.main import app
 
 client = TestClient(app)
 
-def test_health_endpoint():
+from app.config import PRODUCT_NAME
+
+def test_health():
     """Test the health check endpoint."""
     response = client.get("/health")
     assert response.status_code == 200
@@ -15,6 +17,8 @@ def test_health_endpoint():
     assert "status" in data
     assert "services" in data  # Updated to match actual response structure
     assert "version" in data
+
+    assert data["message"] == f"{PRODUCT_NAME} is healthy"
 
 def test_root_endpoint():
     """Test the root endpoint."""
