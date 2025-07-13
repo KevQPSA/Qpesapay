@@ -124,6 +124,10 @@ jobs:
           echo "Waiting for PostgreSQL..."
           sleep 2
         done
+        echo "PostgreSQL is ready"
+
+        # Additional wait to ensure database is fully ready for connections
+        sleep 5
 
     - name: Run database migrations
       env:
@@ -150,11 +154,11 @@ jobs:
         PYTHONPATH: backend
         TESTING: true
         CI: true
-        DISABLE_RATE_LIMITING: true
         DISABLE_EXTERNAL_CALLS: true
+        # Note: DISABLE_RATE_LIMITING removed to allow security tests to run properly
       run: |
         cd backend
-        timeout 300 python -m pytest app/tests/ -n auto --maxfail=5
+        timeout 300 python -m pytest app/tests/ -n auto --maxfail=5 --dist=loadscope
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

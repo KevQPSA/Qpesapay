@@ -85,10 +85,13 @@ app.add_middleware(SSRFProtectionMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(AuthenticationMiddleware)
 
-# Add rate limiting middleware with testing bypass
+# Add rate limiting middleware with conditional testing bypass
 import os
-if not (os.getenv('TESTING') == 'true' or os.getenv('CI') == 'true'):
+# Only disable rate limiting if explicitly requested, not just because we're in CI/CD
+if not (os.getenv('DISABLE_RATE_LIMITING') == 'true'):
     app.add_middleware(RateLimitMiddleware)
+else:
+    logger.info("Rate limiting disabled via DISABLE_RATE_LIMITING environment variable")
 
 # Setup comprehensive error handlers
 setup_error_handlers(app)

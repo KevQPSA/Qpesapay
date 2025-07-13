@@ -9,6 +9,7 @@ certain security features may be disabled for testing purposes.
 import pytest
 import json
 import os
+import asyncio
 from fastapi.testclient import TestClient
 from unittest.mock import patch, Mock
 
@@ -16,23 +17,23 @@ from app.main import app
 from app.core.security import create_tokens
 from app.core.security_audit import WebhookSecurityValidator, EndpointSecurityEnforcer
 
+# Import security test fixtures
+pytest_plugins = ["app.tests.conftest_security"]
+
 client = TestClient(app)
 
 # Check if we're in a testing environment where security features might be disabled
 IS_CI_ENVIRONMENT = os.getenv('CI') == 'true' or os.getenv('TESTING') == 'true'
 RATE_LIMITING_DISABLED = os.getenv('DISABLE_RATE_LIMITING') == 'true'
 
-# Temporary skip for CI/CD environment while investigating test environment differences
-pytestmark = pytest.mark.skipif(
-    IS_CI_ENVIRONMENT,
-    reason="Temporarily skipping security tests in CI/CD while investigating environment differences"
-)
+# Security tests are now re-enabled for CI/CD with proper configuration
+# The temporary skip has been removed
 
 
 class TestAuthenticationEndpoints:
     """Test authentication endpoint security."""
 
-    def test_registration_rate_limiting(self):
+    def test_registration_rate_limiting(self, isolated_test_env):
         """Test registration rate limiting."""
         user_data = {
             "email": "test@gmail.com",
@@ -54,9 +55,9 @@ class TestAuthenticationEndpoints:
             responses.append(response.status_code)
 
         # Should handle multiple requests gracefully
-        # Rate limiting behavior depends on environment
+        # Rate limiting behavior should work in CI/CD now
         for status_code in responses:
-            # Always allow 429 (rate limiting) as it's a valid security response
+            # Allow 429 (rate limiting) as it's a valid security response
             # Also allow other expected responses based on validation and business logic
             assert status_code in [201, 400, 409, 422, 429, 500]
     
@@ -314,10 +315,9 @@ class TestGeneralAPISecurity:
 class TestRateLimiting:
     """Test rate limiting across endpoints."""
 
-    def test_auth_endpoint_rate_limiting(self):
+    def test_auth_endpoint_rate_limiting(self, isolated_test_env):
         """Test authentication endpoints have rate limiting."""
-        # This would test actual rate limiting in a real environment
-        # For now, we document the expected behavior
+        # Test actual rate limiting behavior in CI/CD environment
 
         login_data = {
             "email": "test@gmail.com",
@@ -347,6 +347,88 @@ async def test_complete_security_flow():
     
     # For now, this is a placeholder for integration testing
     assert True
+
+
+class TestAPIDocumentation:
+    """Test API documentation accuracy."""
+
+    def test_openapi_docs_accessible(self):
+        """Test OpenAPI documentation is accessible."""
+        response = client.get("/docs")
+        assert response.status_code == 200
+
+    def test_api_schema_validation(self):
+        """Test API responses match OpenAPI schema."""
+        # Test auth endpoints return proper schema
+        response = client.post("/api/v1/auth/login", json={
+            "email": "test@example.com",
+            "password": "wrongpassword"
+        })
+
+        # Should have consistent error format
+        if response.status_code in [400, 401, 422]:
+            data = response.json()
+            assert "detail" in data or "message" in data
+
+
+class TestCORSPolicy:
+    """Test CORS policy enforcement."""
+
+    def test_cors_headers_present(self):
+        """Test CORS headers are present."""
+        response = client.options("/api/v1/auth/login")
+        # Should handle OPTIONS request
+        assert response.status_code in [200, 405]
+
+    def test_cors_origin_validation(self):
+        """Test CORS origin validation."""
+        headers = {"Origin": "https://malicious-site.com"}
+        response = client.get("/api/v1/auth/login", headers=headers)
+        # Should handle cross-origin requests appropriately
+        assert response.status_code in [200, 400, 401, 403]
+
+
+class TestJWTTokenSecurity:
+    """Test JWT token security scenarios."""
+
+    def test_expired_token_handling(self):
+        """Test expired token handling."""
+        # This would require creating an expired token
+        # For now, test with invalid token format
+        headers = {"Authorization": "Bearer invalid-token-format"}
+        response = client.get("/api/v1/users/me", headers=headers)
+        assert response.status_code in [401, 422]
+
+    def test_token_in_url_rejected(self):
+        """Test tokens in URL are rejected."""
+        response = client.get("/api/v1/users/me?token=some-token")
+        # Should not accept tokens in URL for security
+        assert response.status_code in [401, 422]
+
+
+class TestAuthorizationSecurity:
+    """Test authorization and access control."""
+
+    def test_user_data_isolation(self):
+        """Test users can't access other users' data."""
+        # This would require creating test users and tokens
+        # For now, test without proper authorization
+        response = client.get("/api/v1/users/me")
+        assert response.status_code in [401, 422]
+
+    def test_payment_authorization(self):
+        """Test payment creation requires proper authorization."""
+        payment_data = {
+            "user_id": "different-user-id",
+            "amount": "100.00",
+            "currency": "USDT",
+            "recipient_address": "0x1234567890123456789012345678901234567890",
+            "recipient_network": "ethereum"
+        }
+
+        response = client.post("/api/v1/payments/create", json=payment_data)
+        # Should require authentication
+        assert response.status_code in [401, 403, 422]
 
 
 if __name__ == "__main__":

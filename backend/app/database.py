@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 import logging
+import os
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -19,9 +20,15 @@ elif not database_url.startswith("postgresql+asyncpg://"):
 engine = create_async_engine(
     database_url,
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    pool_recycle=3600,
+    pool_size=5 if os.getenv('TESTING') == 'true' else 10,  # Smaller pool for testing
+    max_overflow=10 if os.getenv('TESTING') == 'true' else 20,  # Smaller overflow for testing
+    pool_recycle=1800 if os.getenv('TESTING') == 'true' else 3600,  # Shorter recycle for testing
+    pool_timeout=30,  # Add explicit timeout
+    connect_args={
+        "server_settings": {
+            "application_name": "qpesapay_test" if os.getenv('TESTING') == 'true' else "qpesapay",
+        }
+    } if os.getenv('TESTING') == 'true' else {},
     echo=settings.LOG_LEVEL == "DEBUG"
 )
 
@@ -62,3 +69,22 @@ async def check_db_connection():
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
         return False
+
+async def wait_for_db_ready(max_retries: int = 30, retry_delay: float = 1.0):
+    """
+    Wait for database to be ready with retries.
+    Useful for CI/CD environments where database might not be immediately available.
+    """
+    import asyncio
+
+    for attempt in range(max_retries):
+        if await check_db_connection():
+            logger.info(f"Database connection established on attempt {attempt + 1}")
+            return True
+
+        if attempt < max_retries - 1:
+            logger.warning(f"Database not ready, retrying in {retry_delay}s (attempt {attempt + 1}/{max_retries})")
+            await asyncio.sleep(retry_delay)
+
+    logger.error(f"Database connection failed after {max_retries} attempts")
+    return False
