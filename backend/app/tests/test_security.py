@@ -21,8 +21,6 @@ from app.core.validation import (
 )
 from app.core.security_audit import WebhookSecurityValidator, EndpointSecurityEnforcer
 from app.models.user import User
-from app.core.security_audit import WebhookSecurityValidator, EndpointSecurityEnforcer
-from app.models.user import User
 from app.schemas.user import UserCreate
 
 client = TestClient(app)

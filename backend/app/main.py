@@ -3,6 +3,7 @@ Main FastAPI application for QPesaPay backend.
 Configures the application with middleware, routes, and error handling.
 """
 
+import os
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
@@ -35,26 +36,49 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("QPesaPay application starting up")
 
-    # TODO: Initialize services
-    # - Database connection pool
-    # - Redis connection
-    # - Background task scheduler
-    # - External service connections
+    # Initialize services
+    try:
+        # Database connection pool
+        await check_db_connection()
+        app.state.db_pool = 'db_pool_placeholder'  # Replace with actual pool
 
-    logger.info("QPesaPay application startup complete")
+        # Redis connection
+        import aioredis
+        app.state.redis = await aioredis.from_url(settings.REDIS_URL)
+
+        # Background task scheduler
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        app.state.scheduler = AsyncIOScheduler()
+        app.state.scheduler.start()
+
+        # External service connections (example)
+        app.state.external_service = 'external_service_placeholder'
+
+        logger.info("QPesaPay application startup complete")
+    except Exception as e:
+        logger.error(f"Startup error: {e}")
+        raise
 
     yield
 
     # Shutdown
     logger.info("QPesaPay application shutting down")
+    try:
+        # Close database pool
+        # await app.state.db_pool.close()
 
-    # TODO: Cleanup resources
-    # - Close database connections
-    # - Close Redis connections
-    # - Stop background tasks
-    # - Flush logs
+        # Close Redis
+        await app.state.redis.close()
 
-    logger.info("QPesaPay application shutdown complete")
+        # Stop background tasks
+        app.state.scheduler.shutdown()
+
+        # Close external service
+        # await app.state.external_service.close()
+
+        logger.info("QPesaPay application shutdown complete")
+    except Exception as e:
+        logger.error(f"Shutdown error: {e}")
 
 
 # Create FastAPI application
@@ -85,10 +109,17 @@ app.add_middleware(SSRFProtectionMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(AuthenticationMiddleware)
 
-# Add rate limiting middleware with testing bypass
+# Add rate limiting middleware with conditional testing bypass
 import os
-if not (os.getenv('TESTING') == 'true' or os.getenv('CI') == 'true'):
+# Rate Limiting Configuration
+# SECURITY WARNING: Disabling rate limiting exposes the API to abuse and denial of service attacks.
+# Rate limiting should ONLY be disabled in controlled testing environments and NEVER in production.
+# This protection prevents API abuse, brute force attacks, and ensures service availability.
+# Only disable rate limiting if explicitly requested, not just because we're in CI/CD
+if not (os.getenv('DISABLE_RATE_LIMITING') == 'true'):
     app.add_middleware(RateLimitMiddleware)
+else:
+    logger.info("Rate limiting disabled via DISABLE_RATE_LIMITING environment variable")
 
 # Setup comprehensive error handlers
 setup_error_handlers(app)

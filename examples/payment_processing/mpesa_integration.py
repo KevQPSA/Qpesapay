@@ -13,9 +13,9 @@ Key Patterns:
 - Comprehensive error handling
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 from typing import Optional, Dict, Any, Callable
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import hashlib
 import hmac
 import base64
@@ -132,18 +132,22 @@ class MPesaService:
         business_shortcode: str,
         passkey: str,
         webhook_secret: str,
+        initiator_name: str = "qpesapay_api",
+        callback_base_url: str = "https://api.qpesapay.com",
         base_url: str = "https://api.safaricom.co.ke",
         timeout_seconds: int = 30
     ):
         """
         Initialize M-Pesa service with credentials.
-        
+
         Args:
             consumer_key: M-Pesa consumer key
             consumer_secret: M-Pesa consumer secret
             business_shortcode: Business shortcode
             passkey: STK Push passkey
             webhook_secret: Webhook signature secret
+            initiator_name: M-Pesa initiator name for B2C transactions
+            callback_base_url: Base URL for webhook callbacks
             base_url: M-Pesa API base URL
             timeout_seconds: Request timeout
         """
@@ -152,6 +156,8 @@ class MPesaService:
         self._business_shortcode = business_shortcode
         self._passkey = passkey
         self._webhook_secret = webhook_secret
+        self._initiator_name = initiator_name
+        self._callback_base_url = callback_base_url
         self._base_url = base_url
         self._timeout = timeout_seconds
         self._access_token: Optional[str] = None
@@ -190,15 +196,15 @@ class MPesaService:
         
         # Step 5: Prepare B2C request
         b2c_payload = {
-            "InitiatorName": "qpesapay_api",
+            "InitiatorName": self._initiator_name,
             "SecurityCredential": self._generate_security_credential(),
             "CommandID": "BusinessPayment",
             "Amount": str(kes_amount),
             "PartyA": self._business_shortcode,
             "PartyB": phone_number.value.replace("+", ""),
             "Remarks": f"Qpesapay settlement {settlement_request.reference}",
-            "QueueTimeOutURL": f"{self._base_url}/webhooks/mpesa/timeout",
-            "ResultURL": f"{self._base_url}/webhooks/mpesa/result",
+            "QueueTimeOutURL": f"{self._callback_base_url}/webhooks/mpesa/timeout",
+            "ResultURL": f"{self._callback_base_url}/webhooks/mpesa/result",
             "Occasion": "Settlement"
         }
         
@@ -364,19 +370,12 @@ class MPesaService:
     
     def _format_kes_amount(self, amount: Money) -> int:
         """
-        Format amount for KES (no cents in practice).
-        
-        Args:
-            amount: Money amount
-            
-        Returns:
-            int: Amount in KES without cents
+        Format amount for KES (no cents in practice) using banker's rounding.
         """
         if amount.currency != Currency.KES:
             raise ValidationError("Amount must be in KES for M-Pesa")
-        
-        # Round to nearest shilling (no cents)
-        return int(amount.value.quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+        # Use banker's rounding (ROUND_HALF_EVEN)
+        return int(amount.value.quantize(Decimal('1'), rounding=ROUND_HALF_EVEN))
     
     def _validate_settlement_request(self, request: SettlementRequest) -> None:
         """Validate settlement request."""
@@ -388,23 +387,53 @@ class MPesaService:
     
     def _get_access_token(self) -> str:
         """Get M-Pesa access token with caching."""
-        # Implementation would handle token caching and refresh
-        pass
-    
+        import requests, time
+        if self._access_token and self._token_expires_at and self._token_expires_at > datetime.now(timezone.utc):
+            return self._access_token
+        response = requests.get(
+            f"{self._base_url}/oauth/v1/generate?grant_type=client_credentials",
+            auth=(self._consumer_key, self._consumer_secret),
+            timeout=self._timeout
+        )
+        response.raise_for_status()
+        data = response.json()
+        self._access_token = data['access_token']
+        self._token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(data.get('expires_in', 3599)))
+        return self._access_token
+
     def _generate_security_credential(self) -> str:
-        """Generate security credential for B2C."""
-        # Implementation would generate encrypted credential
-        pass
-    
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import padding
+        from cryptography.hazmat.primitives import hashes
+        from base64 import b64encode
+        # Load the actual M-Pesa public key certificate (PEM format)
+        with open(self._mpesa_public_key_path, 'rb') as f:
+            public_key = serialization.load_pem_public_key(f.read())
+        # Encrypt the initiator password
+        encrypted = public_key.encrypt(
+            self._initiator_password.encode(),
+            padding.PKCS1v15()
+        )
+        return b64encode(encrypted).decode()
+
     def _make_api_call(
         self, 
         endpoint: str, 
         payload: Dict[str, Any], 
         access_token: str
     ) -> Dict[str, Any]:
-        """Make authenticated API call to M-Pesa."""
-        # Implementation would make HTTP request
-        pass
+        import requests, time
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        url = f"{self._base_url}{endpoint}"
+        for attempt in range(3):
+            try:
+                response = requests.post(url, json=payload, headers=headers, timeout=self._timeout)
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as e:
+                if attempt == 2:
+                    raise
+                time.sleep(2 ** attempt)
     
     def _parse_transaction_status(self, result_code: str) -> MPesaTransactionStatus:
         """Parse M-Pesa result code to transaction status."""

@@ -1,3 +1,15 @@
+import { useState, useEffect } from 'react';
+// Add disconnect method to QpesapayMcpServer
+QpesapayMcpServer.prototype.disconnect = async function () {
+  if (this.transport && typeof this.transport.disconnect === 'function') {
+    try {
+      await this.transport.disconnect();
+      console.log('MCP server disconnected successfully');
+    } catch (err) {
+      console.error('Failed to disconnect MCP server:', err);
+    }
+  }
+};
 /**
  * 🟢 Production Ready: Qpesapay WebMCP Server Integration
  * 
@@ -153,7 +165,11 @@ class QpesapayMcpServer {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount, fromCurrency, toCurrency, priority })
           });
-          
+
+          if (!response.ok) {
+            throw new Error(`Fee calculation failed: ${response.status} ${response.statusText}`);
+          }
+
           const fees = await response.json();
           
           return {
@@ -492,7 +508,7 @@ export async function initializeQpesapayMcp(): Promise<QpesapayMcpServer> {
 export function useQpesapayMcp() {
   const [mcpServer, setMcpServer] = useState<QpesapayMcpServer | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  
+
   useEffect(() => {
     const initMcp = async () => {
       try {
@@ -504,9 +520,18 @@ export function useQpesapayMcp() {
         setIsConnected(false);
       }
     };
-    
+
     initMcp();
+
+    // Cleanup function to disconnect MCP server on unmount
+    return () => {
+      if (mcpServer) {
+        mcpServer.disconnect();
+        setMcpServer(null);
+        setIsConnected(false);
+      }
+    };
   }, []);
-  
+
   return { mcpServer, isConnected };
 }

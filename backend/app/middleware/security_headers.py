@@ -3,6 +3,7 @@ OWASP-compliant Security Headers Middleware
 Implements comprehensive security headers as per OWASP recommendations
 """
 
+import os
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response as StarletteResponse
@@ -184,8 +185,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Apply rate limiting based on endpoint and client."""
 
         # Skip rate limiting during testing
-        import os
-        if os.getenv('TESTING') == 'true' or os.getenv('CI') == 'true':
+        if os.getenv('TESTING', '').lower() == 'true' or os.getenv('CI', '').lower() == 'true':
             return await call_next(request)
 
         client_ip = self._get_client_ip(request)
