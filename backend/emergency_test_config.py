@@ -47,7 +47,9 @@ def mock_external_dependencies():
 
 def apply_emergency_patches():
     """
-    Apply emergency patches to prevent hanging
+    Apply patches to override time delays, causing `time.sleep` and `asyncio.sleep` to return immediately.
+    
+    This prevents test hangs by eliminating artificial delays during test execution.
     """
     # Patch slow operations
     time_patch = patch('time.sleep', return_value=None)

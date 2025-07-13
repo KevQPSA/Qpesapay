@@ -10,7 +10,11 @@ client = TestClient(app)
 from app.config import PRODUCT_NAME
 
 def test_health():
-    """Test the health check endpoint."""
+    """
+    Test the `/health` endpoint to ensure it returns a 200 status and the expected health check fields.
+    
+    Verifies that the response includes "status", "services", "version", and a "message" field matching the product name.
+    """
     response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
@@ -21,7 +25,9 @@ def test_health():
     assert data["message"] == f"{PRODUCT_NAME} is healthy"
 
 def test_root_endpoint():
-    """Test the root endpoint."""
+    """
+    Test that the root ("/") endpoint returns a 200 status and a message containing "Qpesapay".
+    """
     response = client.get("/")
     assert response.status_code == 200
     # Update expectation to match actual response

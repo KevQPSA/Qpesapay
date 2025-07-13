@@ -71,7 +71,15 @@ class WalletImport(BaseModel):
     @field_validator('private_key')
     @classmethod
     def validate_private_key(cls, v):
-        """Validate private key format."""
+        """
+        Validates that the provided private key is a non-empty, 64-character hexadecimal string.
+        
+        Raises:
+            ValueError: If the private key is empty or does not match the required 64-character hexadecimal format.
+        
+        Returns:
+            str: The validated and stripped private key.
+        """
         if not v.strip():
             raise ValueError('Private key cannot be empty')
         

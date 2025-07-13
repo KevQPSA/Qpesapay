@@ -61,7 +61,10 @@ async def get_db():
 
 async def check_db_connection():
     """
-    Check database connection health.
+    Checks if a database connection can be established by executing a simple query.
+    
+    Returns:
+        bool: True if the connection is successful, False otherwise.
     """
     try:
         async with SessionLocal() as session:
@@ -73,8 +76,14 @@ async def check_db_connection():
 
 async def wait_for_db_ready(max_retries: int = 30, retry_delay: float = 1.0):
     """
-    Wait for database to be ready with retries.
-    Useful for CI/CD environments where database might not be immediately available.
+    Attempt to establish a database connection, retrying up to a specified number of times with a delay between attempts.
+    
+    Parameters:
+        max_retries (int): Maximum number of connection attempts before giving up.
+        retry_delay (float): Number of seconds to wait between retries.
+    
+    Returns:
+        bool: True if the database connection is established within the allowed attempts, otherwise False.
     """
     import asyncio
 
