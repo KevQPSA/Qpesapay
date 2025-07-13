@@ -76,7 +76,7 @@ const nextConfig = {
     {
       source: '/api/:path*',
       headers: [
-        { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || 'https://app.qpesapay.com,https://admin.qpesapay.com' },
+        { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_ALLOWED_ORIGINS },
         { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
         { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
       ],
@@ -159,19 +159,20 @@ Update your Content Security Policy:
 
 ```javascript
 // next.config.js - Add CSP headers
-const nonce = crypto.randomUUID();
-const cspHeader = `
-  default-src 'self';
-  script-src 'self' 'nonce-${nonce}';
-  style-src 'self' 'nonce-${nonce}';
-  img-src 'self' blob: data:;
-  font-src 'self';
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  frame-ancestors 'none';
-  connect-src 'self' ${process.env.NEXT_PUBLIC_API_BASE_URL};
-`;
+// In Next.js middleware (middleware.ts), generate a unique nonce per request:
+//
+// import { NextResponse } from 'next/server';
+// import crypto from 'crypto';
+//
+// export function middleware(req) {
+//   const nonce = crypto.randomUUID();
+//   const res = NextResponse.next();
+//   res.headers.set('Content-Security-Policy', `default-src 'self'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; ...`);
+//   res.headers.set('x-nonce', nonce);
+//   return res;
+// }
+//
+// Then pass the nonce to your components via context or props and use it in inline scripts/styles.
 
 // Add to headers configuration
 {

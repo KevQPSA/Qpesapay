@@ -1,3 +1,15 @@
+import { useState, useEffect } from 'react';
+// Add disconnect method to QpesapayMcpServer
+QpesapayMcpServer.prototype.disconnect = async function () {
+  if (this.transport && typeof this.transport.disconnect === 'function') {
+    try {
+      await this.transport.disconnect();
+      console.log('MCP server disconnected successfully');
+    } catch (err) {
+      console.error('Failed to disconnect MCP server:', err);
+    }
+  }
+};
 /**
  * 🟢 Production Ready: Qpesapay WebMCP Server Integration
  * 

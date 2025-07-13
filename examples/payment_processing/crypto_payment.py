@@ -1,16 +1,47 @@
-# --- Demo stubs for missing dependencies ---
+
+# --- Self-contained demo stubs and idempotency store ---
+import threading
+import time
+
+_idempotency_db = {}
+_idempotency_lock = threading.Lock()
+
+def get_idempotency_record(key):
+    with _idempotency_lock:
+        rec = _idempotency_db.get(key)
+        if rec and rec['expires_at'] > time.time():
+            return rec['value']
+        elif rec:
+            del _idempotency_db[key]
+        return None
+
+def set_idempotency_record(key, value, ttl=3600, max_size=10000):
+    with _idempotency_lock:
+        # Enforce size limit
+        if len(_idempotency_db) >= max_size:
+            # Remove oldest
+            oldest = min(_idempotency_db.items(), key=lambda x: x[1]['expires_at'])[0]
+            del _idempotency_db[oldest]
+        _idempotency_db[key] = {'value': value, 'expires_at': time.time() + ttl}
+
+def has_idempotency_key(key):
+    with _idempotency_lock:
+        rec = _idempotency_db.get(key)
+        if rec and rec['expires_at'] > time.time():
+            return True
+        elif rec:
+            del _idempotency_db[key]
+        return False
+
 class BlockchainService:
     def __init__(self):
         pass
+    def send_transaction(self, *args, **kwargs):
+        return {'txid': 'demo-txid'}
 
 class AuditLogger:
     def log_validation_failure(self, payment_request, errors):
-        pass
-from .idempotency_store import (
-    get_idempotency_record,
-    set_idempotency_record,
-    has_idempotency_key
-)
+        print(f"Audit log: Validation failed for {payment_request} with errors: {errors}")
 """
 🟢 Production Ready: Crypto Payment Processing Pattern
 

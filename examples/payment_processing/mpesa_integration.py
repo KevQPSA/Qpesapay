@@ -406,10 +406,12 @@ class MPesaService:
         from cryptography.hazmat.primitives.asymmetric import padding
         from cryptography.hazmat.primitives import hashes
         from base64 import b64encode
-        # NOTE: In production, use the actual M-Pesa public key, not passkey
-        public_key = serialization.load_pem_public_key(self._passkey.encode())
+        # Load the actual M-Pesa public key certificate (PEM format)
+        with open(self._mpesa_public_key_path, 'rb') as f:
+            public_key = serialization.load_pem_public_key(f.read())
+        # Encrypt the initiator password
         encrypted = public_key.encrypt(
-            self._passkey.encode(),
+            self._initiator_password.encode(),
             padding.PKCS1v15()
         )
         return b64encode(encrypted).decode()

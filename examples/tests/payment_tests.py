@@ -400,12 +400,10 @@ class TestPaymentSecurityValidation:
         mock_dependencies.audit_service = mock_audit_service
 
         # Create test payment request
-        payment_request = CryptoPaymentRequest(
+        payment_request = PaymentRequest(
             user_id="user-123",
             amount=Money(Decimal("100.00"), Currency.USDT),
-            recipient_address="0x1234567890123456789012345678901234567890",
-            recipient_network="ethereum",
-            idempotency_key="test-audit-123"
+            recipient_address="0x1234567890123456789012345678901234567890"
         )
 
         # Process payment

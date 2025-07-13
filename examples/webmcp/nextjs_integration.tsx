@@ -1,4 +1,4 @@
-  const [authError, setAuthError] = useState<string | null>(null);
+
 /**
  * 🟢 Production Ready: Next.js WebMCP Integration for Qpesapay
  * 
@@ -21,18 +21,19 @@ import { QpesapayMcpServer } from './qpesapay_mcp_server';
 import PaymentValidationComponent from './PaymentValidationComponent';
 
 // Types for authentication context
-interface User {
+export type User = {
   id: string;
   email: string;
   role: 'customer' | 'merchant' | 'admin';
   kycStatus: 'verified' | 'pending' | 'rejected';
-}
+};
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  authError: string | null;
 }
 
 // Types for MCP context
@@ -49,15 +50,15 @@ interface McpContextType {
  */
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+  const [authError, setAuthError] = useState<string | null>(null);
+
   useEffect(() => {
     // Check for existing authentication on mount
     checkAuthStatus();
   }, []);
-  
+
   const checkAuthStatus = async () => {
     try {
       const response = await fetch('/api/auth/me', {
@@ -67,6 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const userData = await response.json();
         setUser(userData);
         setIsAuthenticated(true);
+        setAuthError(null);
       } else {
         setAuthError('Authentication failed. Please login again.');
       }
@@ -75,7 +77,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Optionally trigger fallback or alert
     }
   };
-  
+
   const login = async (email: string, password: string) => {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
@@ -83,28 +85,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       credentials: 'include',
       body: JSON.stringify({ email, password })
     });
-    
+
     if (!response.ok) {
+      setAuthError('Login failed. Please check your credentials.');
       throw new Error('Login failed');
     }
-    
+
     const userData = await response.json();
     setUser(userData);
     setIsAuthenticated(true);
+    setAuthError(null);
   };
-  
+
   const logout = async () => {
     await fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include'
     });
-    
+
     setUser(null);
     setIsAuthenticated(false);
+    setAuthError(null);
   };
-  
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, authError }}>
       {children}
     </AuthContext.Provider>
   );

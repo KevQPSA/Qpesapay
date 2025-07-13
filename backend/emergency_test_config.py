@@ -30,29 +30,22 @@ def mock_external_dependencies():
     Uses proper patching instead of sys.modules manipulation.
     """
     # Mock Redis connections using proper patching
-    redis_patch = patch('redis.Redis')
-    mock_redis_class = redis_patch.start()
-    mock_redis_instance = MagicMock()
-    mock_redis_instance.ping.return_value = True
-    mock_redis_instance.get.return_value = None
-    mock_redis_instance.set.return_value = True
-    mock_redis_class.return_value = mock_redis_instance
+    with patch('redis.Redis') as mock_redis_class, patch('httpx.AsyncClient') as mock_httpx_class:
+        mock_redis_instance = MagicMock()
+        mock_redis_instance.ping.return_value = True
+        mock_redis_instance.get.return_value = None
+        mock_redis_instance.set.return_value = True
+        mock_redis_class.return_value = mock_redis_instance
 
-    # Mock httpx using proper patching
-    httpx_patch = patch('httpx.AsyncClient')
-    mock_httpx_class = httpx_patch.start()
-    mock_httpx_instance = MagicMock()
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {}
-    mock_httpx_instance.get.return_value = mock_response
-    mock_httpx_instance.post.return_value = mock_response
-    mock_httpx_class.return_value = mock_httpx_instance
+        mock_httpx_instance = MagicMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {}
+        mock_httpx_instance.get.return_value = mock_response
+        mock_httpx_instance.post.return_value = mock_response
+        mock_httpx_class.return_value = mock_httpx_instance
 
-    # Store patches for cleanup
-    _active_patches.extend([redis_patch, httpx_patch])
-
-    print("External dependencies mocked")
+        print("External dependencies mocked (context managed)")
 
 # Global patch storage to maintain patch lifecycle
 _active_patches = []

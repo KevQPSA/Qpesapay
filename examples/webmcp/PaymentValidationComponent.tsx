@@ -68,6 +68,7 @@ export const PaymentValidationComponent: React.FC<ComponentProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [fees, setFees] = useState<any>(null);
   const [isCalculatingFees, setIsCalculatingFees] = useState(false);
+  const [feeError, setFeeError] = useState<string | null>(null);
   
   /**
    * Real-time payment validation using WebMCP
