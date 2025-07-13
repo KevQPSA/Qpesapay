@@ -1,3 +1,4 @@
+  const [authError, setAuthError] = useState<string | null>(null);
 /**
  * 🟢 Production Ready: Next.js WebMCP Integration for Qpesapay
  * 
@@ -62,14 +63,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await fetch('/api/auth/me', {
         credentials: 'include' // Include authentication cookies
       });
-      
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
         setIsAuthenticated(true);
+      } else {
+        setAuthError('Authentication failed. Please login again.');
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      setAuthError('Authentication failed. Please try again.');
+      // Optionally trigger fallback or alert
     }
   };
   
@@ -120,13 +123,28 @@ export const McpProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const { isAuthenticated } = useAuth();
   
   useEffect(() => {
+    let isMounted = true;
+
     if (isAuthenticated) {
       initializeMcpServer();
     } else {
       // Disconnect MCP server when not authenticated
+      if (mcpServer) {
+        mcpServer.disconnect();
+      }
       setMcpServer(null);
       setIsConnected(false);
     }
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (mcpServer) {
+        mcpServer.disconnect();
+      }
+      setMcpServer(null);
+      setIsConnected(false);
+    };
   }, [isAuthenticated]);
   
   const initializeMcpServer = async () => {
@@ -251,9 +269,9 @@ export const QpesapayDashboard: React.FC = () => {
           </div>
         ) : (
           <>
-            {activeTab === 'payments' && (
+            {activeTab === 'payments' && mcpServer && (
               <PaymentValidationComponent
-                mcpServer={mcpServer!}
+                mcpServer={mcpServer}
                 userId={user.id}
                 onValidationComplete={(result) => {
                   console.log('Payment validation completed:', result);
@@ -261,12 +279,12 @@ export const QpesapayDashboard: React.FC = () => {
               />
             )}
             
-            {activeTab === 'compliance' && (
-              <ComplianceMonitor mcpServer={mcpServer!} userId={user.id} />
+            {activeTab === 'compliance' && mcpServer && (
+              <ComplianceMonitor mcpServer={mcpServer} userId={user.id} />
             )}
-            
-            {activeTab === 'monitoring' && (
-              <SystemMonitor mcpServer={mcpServer!} />
+
+            {activeTab === 'monitoring' && mcpServer && (
+              <SystemMonitor mcpServer={mcpServer} />
             )}
           </>
         )}
@@ -460,6 +478,8 @@ const LoginForm: React.FC = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
+          aria-label="Password"
         />
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Logging in...' : 'Login'}

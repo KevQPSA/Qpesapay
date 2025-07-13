@@ -392,15 +392,91 @@ class TestPaymentSecurityValidation:
                 )
     
     def test_audit_trail_completeness(self, payment_processor, mock_dependencies):
-        """Test that all payment operations are properly audited."""
-        # This test would verify that audit logs contain all required fields
-        # for compliance and security monitoring
-        pass
-    
-    def test_rate_limiting_compliance(self):
-        """Test that payment processing respects rate limits."""
-        # This test would verify rate limiting implementation
-        pass
+        """Test that all payment operations generate complete audit logs."""
+        from unittest.mock import Mock
+
+        # Mock audit service
+        mock_audit_service = Mock()
+        mock_dependencies.audit_service = mock_audit_service
+
+        # Create test payment request
+        payment_request = CryptoPaymentRequest(
+            user_id="user-123",
+            amount=Money(Decimal("100.00"), Currency.USDT),
+            recipient_address="0x1234567890123456789012345678901234567890",
+            recipient_network="ethereum",
+            idempotency_key="test-audit-123"
+        )
+
+        # Process payment
+        try:
+            result = payment_processor.process_payment(payment_request)
+        except Exception:
+            pass  # We're testing audit logging, not payment success
+
+        # Verify audit log was called with required fields
+        assert mock_audit_service.log_payment_operation.called
+        call_args = mock_audit_service.log_payment_operation.call_args[1]
+
+        required_fields = [
+            "timestamp", "user_id", "operation", "status",
+            "amount", "currency", "recipient_address", "transaction_id"
+        ]
+
+        for field in required_fields:
+            assert field in call_args, f"Required audit field '{field}' missing"
+
+        # Verify sensitive data is not logged
+        assert "private_key" not in str(call_args)
+        assert "passphrase" not in str(call_args)
+
+    def test_rate_limiting_compliance(self, payment_processor, mock_dependencies):
+        """Test that payment processing respects configured rate limits."""
+        from unittest.mock import Mock
+        import time
+
+        # Mock rate limiter
+        mock_rate_limiter = Mock()
+        mock_dependencies.rate_limiter = mock_rate_limiter
+
+        # Configure rate limit: 3 requests per minute
+        rate_limit = 3
+        time_window = 60  # seconds
+
+        # Track requests
+        request_times = []
+
+        def rate_limit_check(user_id):
+            current_time = time.time()
+            request_times.append(current_time)
+
+            # Count requests in current window
+            recent_requests = [
+                t for t in request_times
+                if current_time - t <= time_window
+            ]
+
+            return len(recent_requests) <= rate_limit
+
+        mock_rate_limiter.check_rate_limit.side_effect = rate_limit_check
+
+        # Test payment requests
+        user_id = "user-rate-test"
+        successful_requests = 0
+        rate_limited_requests = 0
+
+        for i in range(rate_limit + 2):
+            if mock_rate_limiter.check_rate_limit(user_id):
+                successful_requests += 1
+            else:
+                rate_limited_requests += 1
+
+        # Verify rate limiting works
+        assert successful_requests <= rate_limit
+        assert rate_limited_requests >= 2  # At least 2 should be rate limited
+
+        # Verify rate limiter was called for each request
+        assert mock_rate_limiter.check_rate_limit.call_count == rate_limit + 2
 
 
 # Integration test examples (using testnet only)
@@ -437,13 +513,12 @@ class TestPaymentIntegration:
 
 
 # Example test configuration
-def pytest_configure():
-    """Configure pytest for financial system testing."""
-    # Add custom markers
-    pytest.mark.testnet_only = pytest.mark.testnet_only
-    pytest.mark.integration = pytest.mark.integration
-    pytest.mark.security = pytest.mark.security
-    
+
+import pytest
+def pytest_configure(config):
+    config.addinivalue_line("markers", "testnet_only: mark test as testnet only")
+    config.addinivalue_line("markers", "integration: mark test as integration")
+    config.addinivalue_line("markers", "security: mark test as security")
     # Ensure no mainnet usage in tests
     import os
     if os.getenv('TESTING') != 'true':

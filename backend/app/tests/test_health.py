@@ -7,7 +7,7 @@ from app.main import app
 
 client = TestClient(app)
 
-from app.config import PRODUCT_NAME
+from app.config import settings
 
 def test_health():
     """Test the health check endpoint."""
@@ -18,7 +18,7 @@ def test_health():
     assert "services" in data  # Updated to match actual response structure
     assert "version" in data
 
-    assert data["message"] == f"{PRODUCT_NAME} is healthy"
+    assert data["message"] == f"{settings.PROJECT_NAME} is healthy"
 
 def test_root_endpoint():
     """Test the root endpoint."""
@@ -27,4 +27,4 @@ def test_root_endpoint():
     # Update expectation to match actual response
     json_response = response.json()
     assert "message" in json_response
-    assert "Qpesapay" in json_response["message"]
+    assert settings.PROJECT_NAME in json_response["message"]

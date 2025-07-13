@@ -87,9 +87,11 @@ app.add_middleware(AuthenticationMiddleware)
 
 # Add rate limiting middleware with conditional testing bypass
 import os
+# Rate Limiting Configuration
+# SECURITY WARNING: Disabling rate limiting exposes the API to abuse and denial of service attacks.
+# Rate limiting should ONLY be disabled in controlled testing environments and NEVER in production.
+# This protection prevents API abuse, brute force attacks, and ensures service availability.
 # Only disable rate limiting if explicitly requested, not just because we're in CI/CD
-## WARNING: Disabling rate limiting exposes the API to abuse and denial of service attacks.
-# Only disable rate limiting in controlled testing environments. NEVER disable in production!
 if not (os.getenv('DISABLE_RATE_LIMITING') == 'true'):
     app.add_middleware(RateLimitMiddleware)
 else:

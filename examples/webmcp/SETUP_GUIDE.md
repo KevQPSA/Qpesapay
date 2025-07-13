@@ -76,7 +76,7 @@ const nextConfig = {
     {
       source: '/api/:path*',
       headers: [
-        { key: 'Access-Control-Allow-Origin', value: '*' },
+        { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || 'https://app.qpesapay.com,https://admin.qpesapay.com' },
         { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
         { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
       ],
@@ -159,10 +159,11 @@ Update your Content Security Policy:
 
 ```javascript
 // next.config.js - Add CSP headers
+const nonce = crypto.randomUUID();
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline';
-  style-src 'self' 'unsafe-inline';
+  script-src 'self' 'nonce-${nonce}';
+  style-src 'self' 'nonce-${nonce}';
   img-src 'self' blob: data:;
   font-src 'self';
   object-src 'none';

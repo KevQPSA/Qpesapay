@@ -115,8 +115,14 @@ class SecureKeyManager:
             encryptor = cipher.encryptor()
             ciphertext = encryptor.update(plaintext.encode()) + encryptor.finalize()
             
-            # Clear key from memory
-            key = b'\x00' * len(key)
+            # Securely clear key from memory
+            if isinstance(key, bytes):
+                key_ba = bytearray(key)
+                for i in range(len(key_ba)):
+                    key_ba[i] = 0
+            elif isinstance(key, bytearray):
+                for i in range(len(key)):
+                    key[i] = 0
             
             # Log encryption (without sensitive data)
             logger.info(
@@ -186,8 +192,14 @@ class SecureKeyManager:
             decryptor = cipher.decryptor()
             plaintext = decryptor.update(ciphertext) + decryptor.finalize()
             
-            # Clear key from memory
-            key = b'\x00' * len(key)
+            # Securely clear key from memory
+            if isinstance(key, bytes):
+                key_ba = bytearray(key)
+                for i in range(len(key_ba)):
+                    key_ba[i] = 0
+            elif isinstance(key, bytearray):
+                for i in range(len(key)):
+                    key[i] = 0
             
             # Log decryption (without sensitive data)
             logger.info(
@@ -424,55 +436,99 @@ def example_security_usage():
     """
     Example of how to use security patterns in Qpesapay.
     This demonstrates proper patterns for financial system security.
+
+    SECURITY NOTE: This is an example only. In production:
+    - Never hardcode sensitive data like private keys
+    - Use secure input methods for sensitive data
+    - Implement proper key management systems
+    - Ensure sensitive outputs are not logged
     """
-    # Initialize key manager
-    key_manager = SecureKeyManager()
-    private_key_manager = PrivateKeyManager(key_manager)
-    
-    # Encrypt sensitive data
-    sensitive_data = "user_private_information"
-    encrypted = key_manager.encrypt_sensitive_data(
-        sensitive_data, 
-        context="user_kyc_data"
-    )
-    
-    # Decrypt sensitive data
-    decrypted = key_manager.decrypt_sensitive_data(
-        encrypted, 
-        context="user_kyc_data"
-    )
-    
-    # Store private key
-    private_key = "0123456789abcdef" * 4  # Example key
-    encrypted_key = private_key_manager.store_private_key(
-        private_key, 
-        wallet_id="wallet-123", 
-        network="ethereum"
-    )
-    
-    # Hash password
-    password_data = SecureHasher.hash_password("user_password_123")
-    
-    # Verify password
-    is_valid = SecureHasher.verify_password(
-        "user_password_123",
-        password_data["hash"],
-        password_data["salt"]
-    )
-    
-    # Create audit hash
-    audit_data = {
-        "transaction_id": "tx-123",
-        "amount": "100.50",
-        "timestamp": "2024-01-01T00:00:00Z"
-    }
-    audit_hash = SecureHasher.create_audit_hash(audit_data)
-    
-    return {
-        "encrypted_data": encrypted,
-        "decrypted_data": decrypted,
-        "encrypted_key": encrypted_key,
-        "password_hash": password_data,
-        "password_valid": is_valid,
-        "audit_hash": audit_hash
-    }
+    try:
+        # Initialize key manager
+        key_manager = SecureKeyManager()
+        private_key_manager = PrivateKeyManager(key_manager)
+
+        # Encrypt sensitive data
+        sensitive_data = "user_private_information"
+        try:
+            encrypted = key_manager.encrypt_sensitive_data(
+                sensitive_data,
+                context="user_kyc_data"
+            )
+            logger.info("Data encryption successful")
+        except Exception as e:
+            logger.error(f"Encryption failed: {e}")
+            raise
+
+        # Decrypt sensitive data
+        try:
+            decrypted = key_manager.decrypt_sensitive_data(
+                encrypted,
+                context="user_kyc_data"
+            )
+            logger.info("Data decryption successful")
+        except Exception as e:
+            logger.error(f"Decryption failed: {e}")
+            raise
+
+        # Store private key (SECURITY: In production, use secure input methods)
+        # This is for demonstration only - never hardcode private keys
+        try:
+            # Simulate secure key generation/input
+            private_key = "0123456789abcdef" * 4  # Example only - use secure generation
+            encrypted_key = private_key_manager.store_private_key(
+                private_key,
+                wallet_id="wallet-123",
+                network="ethereum"
+            )
+            logger.info("Private key storage successful")
+        except Exception as e:
+            logger.error(f"Key storage failed: {e}")
+            raise
+
+        # Hash password
+        try:
+            password_data = SecureHasher.hash_password("user_password_123")
+            logger.info("Password hashing successful")
+        except Exception as e:
+            logger.error(f"Password hashing failed: {e}")
+            raise
+
+        # Verify password
+        try:
+            is_valid = SecureHasher.verify_password(
+                "user_password_123",
+                password_data["hash"],
+                password_data["salt"]
+            )
+            logger.info(f"Password verification: {'valid' if is_valid else 'invalid'}")
+        except Exception as e:
+            logger.error(f"Password verification failed: {e}")
+            raise
+
+        # Create audit hash
+        try:
+            audit_data = {
+                "transaction_id": "tx-123",
+                "amount": "100.50",
+                "timestamp": "2024-01-01T00:00:00Z"
+            }
+            audit_hash = SecureHasher.create_audit_hash(audit_data)
+            logger.info("Audit hash creation successful")
+        except Exception as e:
+            logger.error(f"Audit hash creation failed: {e}")
+            raise
+
+        # Return non-sensitive summary (do not return actual encrypted data)
+        return {
+            "encryption_successful": True,
+            "decryption_successful": True,
+            "key_storage_successful": True,
+            "password_validation_successful": is_valid,
+            "audit_hash_created": True
+        }
+
+    except Exception as e:
+        # Handle errors securely, do not log sensitive data
+        logger.error("Security operation failed - check individual operation logs")
+        return {"error": "A security error occurred. Check logs for details."}

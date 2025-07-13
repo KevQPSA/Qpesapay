@@ -1,3 +1,4 @@
+  const [feeError, setFeeError] = useState<string | null>(null);
 /**
  * 🟢 Production Ready: WebMCP Payment Validation Component
  * 
@@ -126,6 +127,7 @@ export const PaymentValidationComponent: React.FC<ComponentProps> = ({
         setFees(feeData);
       }
     } catch (error) {
+      setFeeError('Fee calculation failed. Please try again.');
       console.error('Fee calculation failed:', error);
     } finally {
       setIsCalculatingFees(false);
@@ -261,8 +263,8 @@ export const PaymentValidationComponent: React.FC<ComponentProps> = ({
           <label htmlFor="amount">Amount</label>
           <input
             id="amount"
-            type="number"
-            step="0.000001"
+            type="text"
+            pattern="^\\d+(\\.\\d{1,8})?$"
             value={paymentForm.amount}
             onChange={(e) => handleInputChange('amount', e.target.value)}
             placeholder="Enter amount"

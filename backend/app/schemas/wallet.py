@@ -309,15 +309,16 @@ class WalletRestore(BaseModel):
         """Validate private key."""
         if v is None:
             return v
-        # Call the static method from WalletImport class
+
         if not v.strip():
             raise ValueError('Private key cannot be empty')
 
         private_key = v.strip()
 
         # Basic validation - more specific validation would be done in the service layer
-        if len(private_key) < 32:
-            raise ValueError('Private key is too short')
+        # Minimum length aligned with standard private key requirements (64 hex characters)
+        if len(private_key) < 64:
+            raise ValueError('Private key must be at least 64 characters long')
 
         # Check if it's a valid hex string (for most cryptocurrencies)
         try:

@@ -1,9 +1,9 @@
 import asyncio
+import logging
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-import logging
-import os
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -76,12 +76,13 @@ async def wait_for_db_ready(max_retries: int = 30, retry_delay: float = 1.0):
     Wait for database to be ready with retries.
     Useful for CI/CD environments where database might not be immediately available.
     """
-    import asyncio
-
     for attempt in range(max_retries):
-        if await check_db_connection():
-            logger.info(f"Database connection established on attempt {attempt + 1}")
-            return True
+        try:
+            if await check_db_connection():
+                logger.info(f"Database connection established on attempt {attempt + 1}")
+                return True
+        except Exception as e:
+            logger.warning(f"Unexpected error during database connection check (attempt {attempt + 1}/{max_retries}): {e}")
 
         if attempt < max_retries - 1:
             logger.warning(f"Database not ready, retrying in {retry_delay}s (attempt {attempt + 1}/{max_retries})")
