@@ -6,7 +6,7 @@ python-multipart==0.0.6
 sqlalchemy==2.0.23
 alembic==1.12.1
 asyncpg==0.29.0
-psycopg2-binary==2.9.9  # For Alembic migrations (sync driver)
+# psycopg2-binary==2.9.9  # Commented out - causing build issues on Windows
 
 # Authentication and Security
 python-jose[cryptography]==3.3.0
@@ -14,7 +14,7 @@ passlib[bcrypt]==1.7.4
 cryptography==41.0.7
 
 # Validation and Serialization
-pydantic==2.5.0
+pydantic>=2.3.0,<3.0.0
 pydantic-settings==2.1.0
 email-validator==2.1.0
 
@@ -67,9 +67,9 @@ bcrypt==4.1.2
 # Date utilities
 python-dateutil==2.8.2
 
-# WebAgent Integration
-sglang[all]==0.3.5
-qwen-agent[gui,rag,code_interpreter,mcp]==0.0.12
-transformers==4.36.2
-tiktoken==0.5.2
-openai==1.6.1
+# WebAgent Integration (Simplified for compatibility)
+# sglang[all]==0.3.5  # Commented out - complex dependencies
+# qwen-agent[gui,rag,code_interpreter]==0.0.12  # Commented out - dependency conflicts
+transformers>=4.30.0
+tiktoken>=0.5.0
+openai>=1.6.0
