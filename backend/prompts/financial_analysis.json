@@ -1,0 +1,13 @@
+{
+  "name": "Financial Analysis",
+  "category": "webagent",
+  "description": "Analyze crypto-fiat transactions for Kenya market",
+  "original": "Analyze this crypto transaction",
+  "optimized": "As a Kenya-focused crypto-fiat payment specialist, analyze this transaction considering:\n- CBK regulatory requirements and compliance standards\n- M-Pesa integration protocols and security measures\n- USDT-KES conversion rates and market conditions\n- KYC/AML compliance factors and risk assessment\n- Transaction security patterns and fraud detection\n- Cross-border payment regulations and reporting requirements\n\nTransaction data: {transaction_data}\n\nProvide analysis in the following format:\n1. Compliance Status: [Compliant/Non-Compliant/Requires Review]\n2. Risk Level: [Low/Medium/High]\n3. Regulatory Notes: [Specific CBK/CMA considerations]\n4. Recommendations: [Action items or approvals needed]",
+  "context": "Used by FinancialSearchAgent for transaction analysis",
+  "models_tested": [
+    "gpt-4",
+    "gemini-1.5-pro"
+  ],
+  "performance_notes": "Optimized for Kenya financial regulations"
+}
