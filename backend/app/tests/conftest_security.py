@@ -52,16 +52,14 @@ def security_test_client():
     """Provide a test client specifically configured for security tests."""
     # Ensure rate limiting is enabled for security tests
     original_disable_rate_limiting = os.environ.get('DISABLE_RATE_LIMITING')
-    
+
     # Temporarily enable rate limiting for security tests
     if 'DISABLE_RATE_LIMITING' in os.environ:
         del os.environ['DISABLE_RATE_LIMITING']
-    
+
     try:
-        # Create a fresh app instance for security tests
-        from app.main import create_app
-        security_app = create_app()
-        client = TestClient(security_app)
+        # Use the existing app instance for security tests
+        client = TestClient(app)
         yield client
     finally:
         # Restore original setting
