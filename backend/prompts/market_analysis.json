@@ -1,0 +1,13 @@
+{
+  "name": "Market Conditions Analysis",
+  "category": "market",
+  "description": "Analyze crypto-fiat market conditions for Kenya",
+  "original": "What are the current market conditions?",
+  "optimized": "Analyze crypto-fiat market conditions for Kenya with comprehensive focus on:\n\n1. Exchange Rate Analysis:\n   - USDT/KES current rates and trends\n   - Bitcoin/KES market movements\n   - Volatility patterns and predictions\n   - Arbitrage opportunities\n\n2. M-Pesa Integration Metrics:\n   - Transaction volume patterns\n   - Peak usage times and seasonal trends\n   - Integration success rates\n   - User adoption metrics\n\n3. Regulatory Impact Assessment:\n   - Recent CBK policy changes\n   - CMA regulatory updates\n   - Government stance on cryptocurrency\n   - Banking sector collaboration trends\n\n4. Economic Indicators:\n   - Kenya Shilling stability factors\n   - Inflation impact on crypto adoption\n   - Cross-border remittance flows\n   - Mobile money ecosystem health\n\n5. Competitive Landscape:\n   - Other crypto-fiat services in Kenya\n   - Traditional banking digital initiatives\n   - Fintech innovation trends\n   - Market share analysis\n\nMarket data: {market_data}\n\nProvide actionable insights for strategic decision-making.",
+  "context": "Used by MarketAnalysisAgent for strategic insights",
+  "models_tested": [
+    "gpt-4",
+    "gemini-1.5-pro"
+  ],
+  "performance_notes": "Optimized for Kenya market specifics"
+}

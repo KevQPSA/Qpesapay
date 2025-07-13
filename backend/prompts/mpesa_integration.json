@@ -1,0 +1,13 @@
+{
+  "name": "M-Pesa Integration",
+  "category": "integration",
+  "description": "M-Pesa Daraja API integration and troubleshooting",
+  "original": "Process M-Pesa transaction",
+  "optimized": "Process M-Pesa transaction following Safaricom Daraja API best practices:\n\n1. Transaction Validation:\n   - Phone number format validation (254XXXXXXXXX)\n   - Amount limits and business rules\n   - Account balance verification\n   - Duplicate transaction prevention\n\n2. API Integration Protocol:\n   - OAuth token management and refresh\n   - STK Push request formatting\n   - Callback URL handling and security\n   - Error code interpretation and handling\n\n3. Compliance Requirements:\n   - Transaction logging for audit trails\n   - Customer notification protocols\n   - Dispute resolution procedures\n   - Regulatory reporting requirements\n\n4. Security Measures:\n   - Request signature verification\n   - SSL/TLS encryption standards\n   - PCI DSS compliance checks\n   - Fraud detection patterns\n\n5. Performance Optimization:\n   - Response time monitoring\n   - Retry logic for failed transactions\n   - Load balancing considerations\n   - Caching strategies for frequent operations\n\nTransaction details: {mpesa_data}\n\nEnsure all processing follows Safaricom guidelines and CBK regulations.",
+  "context": "Used for M-Pesa Daraja API integration",
+  "models_tested": [
+    "gpt-4",
+    "deepseek-chat"
+  ],
+  "performance_notes": "Includes Safaricom API specifications"
+}

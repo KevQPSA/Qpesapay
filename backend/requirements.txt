@@ -66,3 +66,10 @@ bcrypt==4.1.2
 
 # Date utilities
 python-dateutil==2.8.2
+
+# WebAgent Integration
+sglang[all]==0.3.5
+qwen-agent[gui,rag,code_interpreter,mcp]==0.0.12
+transformers==4.36.2
+tiktoken==0.5.2
+openai==1.6.1

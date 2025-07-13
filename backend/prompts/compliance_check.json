@@ -1,0 +1,13 @@
+{
+  "name": "Compliance Verification",
+  "category": "compliance",
+  "description": "Comprehensive regulatory compliance checking",
+  "original": "Check if this transaction is compliant",
+  "optimized": "Perform comprehensive regulatory compliance analysis for Kenya financial services:\n\n1. CBK Guidelines Verification:\n   - Anti-Money Laundering (AML) requirements\n   - Know Your Customer (KYC) standards\n   - Foreign Exchange regulations\n   - Digital payment service provider rules\n\n2. CMA Requirements Check:\n   - Securities and investment regulations\n   - Capital markets compliance\n   - Investor protection measures\n\n3. Data Protection Compliance:\n   - Kenya Data Protection Act compliance\n   - Customer data handling protocols\n   - Cross-border data transfer regulations\n\n4. Transaction Risk Assessment:\n   - Suspicious activity patterns\n   - High-risk jurisdiction involvement\n   - Transaction amount thresholds\n   - Frequency and velocity analysis\n\nData to analyze: {compliance_data}\n\nProvide detailed compliance report with specific regulatory references.",
+  "context": "Used by ComplianceAgent for regulatory verification",
+  "models_tested": [
+    "gpt-4",
+    "deepseek-chat"
+  ],
+  "performance_notes": "Includes specific Kenya regulatory framework"
+}
